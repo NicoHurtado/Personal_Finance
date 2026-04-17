@@ -3,25 +3,76 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Sequence.io palette */
+  --primary: #025864;
+  --primary-hover: #014750;
+  --primary-soft: #E6F0F2;
+  --primary-tint: #F4F9FA;
+  --accent: #00D47E;
+  --accent-hover: #00B86B;
+  --accent-soft: rgba(0, 212, 126, 0.10);
+  --accent-tint: #E6FBF2;
+  --danger: #E5484D;
+  --danger-hover: #CC3B40;
+  --danger-soft: rgba(229, 72, 77, 0.08);
+
+  /* Neutrals */
+  --background: #FFFFFF;
+  --foreground: #0A1519;
+  --surface: #FFFFFF;
+  --surface-hover: #FAFBFB;
+  --border: #E6EAEB;
+  --border-light: #EEF1F1;
+  --text-primary: #0A1519;
+  --text-secondary: #4A5B60;
+  --text-tertiary: #7A8B90;
+  --sidebar-bg: #FFFFFF;
+  --sidebar-border: #E6EAEB;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 body {
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  letter-spacing: -0.005em;
 }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Tabular numbers for financial data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Minimal scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #CFD7D9;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #7A8B90;
+}
+
+/* Focus ring style */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }

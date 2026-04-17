@@ -1,0 +1,82 @@
+{
+  "user": {
+    "name": "Mamá",
+    "email": "mama@finance.app",
+    "password": "mama123",
+    "loginCode": "mama-fin-26"
+  },
+  "accounts": [
+    {
+      "slug": "davivienda-tc",
+      "name": "Davivienda Mastercard",
+      "type": "credit_card",
+      "currency": "COP",
+      "color": "#ED1C24",
+      "colorGradientEnd": "#B81520",
+      "sortOrder": 1,
+      "config": {
+        "creditLimit": 8000000,
+        "billingCutoffDay": 15
+      }
+    },
+    {
+      "slug": "davivienda",
+      "name": "Davivienda Ahorros",
+      "type": "debit",
+      "currency": "COP",
+      "color": "#ED1C24",
+      "colorGradientEnd": "#9E1018",
+      "sortOrder": 2
+    },
+    {
+      "slug": "nequi",
+      "name": "Nequi",
+      "type": "debit",
+      "currency": "COP",
+      "color": "#E21064",
+      "colorGradientEnd": "#A50C4B",
+      "sortOrder": 3
+    },
+    {
+      "slug": "fiducuenta",
+      "name": "Fiducuenta Davivienda",
+      "type": "fixed_income",
+      "currency": "COP",
+      "color": "#1A3A5C",
+      "colorGradientEnd": "#0F2238",
+      "sortOrder": 4,
+      "config": {
+        "annualRate": 8.5,
+        "anchorBalance": 12000000,
+        "anchorGrowth": 85000,
+        "anchorDate": "2026-04-16"
+      }
+    }
+  ],
+  "categories": [
+    { "name": "Mercado", "color": "#2E7D32" },
+    { "name": "Servicios", "color": "#1565C0" },
+    { "name": "Salud", "color": "#C62828" },
+    { "name": "Transporte", "color": "#F57F17" },
+    { "name": "Hogar", "color": "#6A1B9A" }
+  ],
+  "transactions": {
+    "davivienda-tc": [
+      { "fecha": "10/04/26", "descripcion": "Éxito mercado", "monto": "-$235.000" },
+      { "fecha": "05/04/26", "descripcion": "Pago TC", "monto": "$500.000" }
+    ],
+    "davivienda": [
+      { "fecha": "01/04/26", "descripcion": "Pensión", "monto": "$3.200.000" },
+      { "fecha": "03/04/26", "descripcion": "Servicios públicos", "monto": "-$380.000" }
+    ],
+    "nequi": [
+      { "fecha": "12/04/26", "descripcion": "Transferencia hijo", "monto": "$200.000" },
+      { "fecha": "12/04/26", "descripcion": "Rappi", "monto": "-$45.000" }
+    ],
+    "fiducuenta": [
+      { "fecha": "01/03/26", "monto": "$5.000.000" },
+      { "fecha": "15/03/26", "monto": "$7.000.000" }
+    ]
+  },
+  "holdings": {}
+}
