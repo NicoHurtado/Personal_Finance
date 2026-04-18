@@ -69,8 +69,8 @@ function NavLink({ item, active }: { item: NavItem; active: boolean }) {
       href={item.href}
       className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
         active
-          ? "bg-[#025864] text-white font-medium"
-          : "text-[#4A5B60] hover:bg-[#F2F5F5] hover:text-[#0A1519]"
+          ? "bg-primary text-primary-foreground font-medium"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
       }`}
     >
       <span className="shrink-0">{item.icon}</span>
@@ -110,16 +110,16 @@ export default function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[220px] bg-white border-r border-[#E6EAEB] z-40">
+      <aside className="hidden md:flex flex-col fixed left-0 top-0 bottom-0 w-[220px] bg-sidebar border-r border-sidebar-border z-40">
         {/* Brand */}
         <div className="px-5 pt-7 pb-8">
-          <span className="text-[15px] font-semibold tracking-tight text-[#0A1519]">Finance</span>
+          <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">Finance</span>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 flex flex-col px-3 gap-6 overflow-y-auto">
           <div>
-            <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-[#7A8B90]">General</p>
+            <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">General</p>
             <div className="flex flex-col gap-0.5">
               {generalItems.map((item) => (
                 <NavLink key={item.href} item={item} active={isActive(item.href)} />
@@ -127,7 +127,7 @@ export default function Sidebar() {
             </div>
           </div>
           <div>
-            <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-[#7A8B90]">Investments</p>
+            <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">Investments</p>
             <div className="flex flex-col gap-0.5">
               {investmentItems.map((item) => (
                 <NavLink key={item.href} item={item} active={isActive(item.href)} />
@@ -137,18 +137,18 @@ export default function Sidebar() {
         </nav>
 
         {/* Bottom user + logout */}
-        <div className="px-3 py-5 border-t border-[#E6EAEB]">
+        <div className="px-3 py-5 border-t border-sidebar-border">
           <div className="flex items-center gap-3 px-2 py-1.5">
-            <div className="w-8 h-8 rounded-full bg-[#025864] flex items-center justify-center text-white text-[11px] font-medium shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-[11px] font-medium shrink-0">
               {userInitials || "··"}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[12px] font-medium text-[#0A1519] truncate">{userName || "Loading..."}</p>
-              <p className="text-[10px] text-[#7A8B90] truncate">Personal</p>
+              <p className="text-[12px] font-medium text-foreground truncate">{userName || "Loading..."}</p>
+              <p className="text-[10px] text-muted-foreground truncate">Personal</p>
             </div>
             <button
               onClick={handleLogout}
-              className="p-1.5 rounded-lg text-[#7A8B90] hover:text-[#E5484D] hover:bg-[#FFF1F0] transition-colors shrink-0"
+              className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors shrink-0"
               title="Sign out"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
@@ -160,7 +160,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-[#E6EAEB] z-40 flex justify-around py-2 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom">
         {mobileItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -168,7 +168,7 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`flex flex-col items-center gap-1 px-2 py-1.5 text-[10px] font-medium transition-colors ${
-                active ? "text-[#025864]" : "text-[#7A8B90]"
+                active ? "text-primary" : "text-muted-foreground"
               }`}
             >
               {item.icon}

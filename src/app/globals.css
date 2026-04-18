@@ -4,41 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Legacy palette aliases — maps old custom vars to new shadcn green theme */
 :root {
-  /* Sequence.io palette */
-  --primary: #025864;
-  --primary-hover: #014750;
-  --primary-soft: #E6F0F2;
-  --primary-tint: #F4F9FA;
-  --accent: #00D47E;
-  --accent-hover: #00B86B;
-  --accent-soft: rgba(0, 212, 126, 0.10);
-  --accent-tint: #E6FBF2;
-  --danger: #E5484D;
-  --danger-hover: #CC3B40;
-  --danger-soft: rgba(229, 72, 77, 0.08);
-
-  /* Neutrals */
-  --surface: #FFFFFF;
-  --surface-hover: #FAFBFB;
-  --border: #E6EAEB;
-  --border-light: #EEF1F1;
-  --text-primary: #0A1519;
-  --text-secondary: #4A5B60;
-  --text-tertiary: #7A8B90;
-  --sidebar-bg: #FFFFFF;
-  --sidebar-border: #E6EAEB;
-}
-
-html, body {
-  font-family: "Helvetica Neue", Helvetica, Arial, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-
-body {
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.005em;
+  --legacy-primary: oklch(0.448 0.119 151.328);      /* dark green (old teal) */
+  --legacy-primary-hover: oklch(0.38 0.1 151);
+  --legacy-accent: oklch(0.723 0.219 149.579);        /* bright green */
+  --legacy-accent-hover: oklch(0.627 0.194 149.214);
+  --legacy-danger: oklch(0.577 0.245 27.325);
+  --legacy-danger-hover: oklch(0.5 0.22 27);
+  --legacy-text-secondary: oklch(0.45 0.02 220);
+  --legacy-text-tertiary: oklch(0.6 0.015 220);
+  --legacy-border: oklch(0.922 0 0);
+  --legacy-muted: oklch(0.97 0 0);
 }
 
 /* Tabular numbers for financial data */
@@ -56,23 +33,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #CFD7D9;
+  background: oklch(0.708 0 0);
   border-radius: 2px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #7A8B90;
-}
-
-/* Focus ring style */
-*:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: none;
+  background: oklch(0.556 0 0);
 }
 
 @layer base {

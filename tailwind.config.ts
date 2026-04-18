@@ -1,6 +1,7 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -9,58 +10,76 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        /* Sequence.io palette */
-        primary: "#025864",         // dark teal
-        "primary-hover": "#014750",
-        "primary-soft": "#E6F0F2",
-        "primary-tint": "#F4F9FA",
-        accent: "#00D47E",          // sequence green
-        "accent-hover": "#00B86B",
-        "accent-soft": "rgba(0, 212, 126, 0.10)",
-        "accent-tint": "#E6FBF2",
-        danger: "#E5484D",
-        "danger-hover": "#CC3B40",
-        "danger-soft": "rgba(229, 72, 77, 0.08)",
-        /* Neutrals */
-        ink: "#0A1519",             // near black with teal undertone
-        "ink-light": "#1F2D31",
-        "card-border": "#E6EAEB",
-        "card-border-hover": "#CFD7D9",
-        surface: "#FFFFFF",
-        "surface-hover": "#FAFBFB",
-        muted: "#F2F5F5",
-        "muted-2": "#E9EEEE",
-        "text-primary": "#0A1519",
-        "text-secondary": "#4A5B60",
-        "text-tertiary": "#7A8B90",
+        background: "oklch(var(--background) / <alpha-value>)",
+        foreground: "oklch(var(--foreground) / <alpha-value>)",
+        card: {
+          DEFAULT: "oklch(var(--card) / <alpha-value>)",
+          foreground: "oklch(var(--card-foreground) / <alpha-value>)",
+        },
+        popover: {
+          DEFAULT: "oklch(var(--popover) / <alpha-value>)",
+          foreground: "oklch(var(--popover-foreground) / <alpha-value>)",
+        },
+        primary: {
+          DEFAULT: "oklch(var(--primary) / <alpha-value>)",
+          foreground: "oklch(var(--primary-foreground) / <alpha-value>)",
+        },
+        secondary: {
+          DEFAULT: "oklch(var(--secondary) / <alpha-value>)",
+          foreground: "oklch(var(--secondary-foreground) / <alpha-value>)",
+        },
+        muted: {
+          DEFAULT: "oklch(var(--muted) / <alpha-value>)",
+          foreground: "oklch(var(--muted-foreground) / <alpha-value>)",
+        },
+        accent: {
+          DEFAULT: "oklch(var(--accent) / <alpha-value>)",
+          foreground: "oklch(var(--accent-foreground) / <alpha-value>)",
+        },
+        destructive: {
+          DEFAULT: "oklch(var(--destructive) / <alpha-value>)",
+        },
+        border: "oklch(var(--border) / <alpha-value>)",
+        input: "oklch(var(--input) / <alpha-value>)",
+        ring: "oklch(var(--ring) / <alpha-value>)",
+        chart: {
+          "1": "oklch(var(--chart-1) / <alpha-value>)",
+          "2": "oklch(var(--chart-2) / <alpha-value>)",
+          "3": "oklch(var(--chart-3) / <alpha-value>)",
+          "4": "oklch(var(--chart-4) / <alpha-value>)",
+          "5": "oklch(var(--chart-5) / <alpha-value>)",
+        },
+        sidebar: {
+          DEFAULT: "oklch(var(--sidebar) / <alpha-value>)",
+          foreground: "oklch(var(--sidebar-foreground) / <alpha-value>)",
+          primary: "oklch(var(--sidebar-primary) / <alpha-value>)",
+          "primary-foreground": "oklch(var(--sidebar-primary-foreground) / <alpha-value>)",
+          accent: "oklch(var(--sidebar-accent) / <alpha-value>)",
+          "accent-foreground": "oklch(var(--sidebar-accent-foreground) / <alpha-value>)",
+          border: "oklch(var(--sidebar-border) / <alpha-value>)",
+          ring: "oklch(var(--sidebar-ring) / <alpha-value>)",
+        },
       },
       fontFamily: {
-        sans: [
-          "Helvetica Neue",
-          "Helvetica",
-          "Arial",
-          "system-ui",
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "sans-serif",
-        ],
+        sans: ["var(--font-sans)", "Outfit", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       borderRadius: {
-        "2xl": "1rem",
-        "3xl": "1.25rem",
+        lg: "var(--radius)",
+        md: "calc(var(--radius) - 2px)",
+        sm: "calc(var(--radius) - 4px)",
       },
       transitionDuration: {
         DEFAULT: "150ms",
       },
       fontSize: {
-        "display": ["2.75rem", { lineHeight: "1.05", letterSpacing: "-0.035em", fontWeight: "500" }],
-        "heading": ["1.75rem", { lineHeight: "1.15", letterSpacing: "-0.02em", fontWeight: "500" }],
-        "title": ["1.125rem", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "500" }],
+        display: ["2.75rem", { lineHeight: "1.05", letterSpacing: "-0.035em", fontWeight: "500" }],
+        heading: ["1.75rem", { lineHeight: "1.15", letterSpacing: "-0.02em", fontWeight: "500" }],
+        title: ["1.125rem", { lineHeight: "1.3", letterSpacing: "-0.01em", fontWeight: "500" }],
       },
       boxShadow: {
-        "soft": "0 1px 2px rgba(10, 21, 25, 0.04), 0 1px 1px rgba(10, 21, 25, 0.02)",
-        "lift": "0 4px 16px rgba(10, 21, 25, 0.06)",
+        soft: "0 1px 2px rgba(0,0,0,0.04), 0 1px 1px rgba(0,0,0,0.02)",
+        lift: "0 4px 16px rgba(0,0,0,0.06)",
       },
     },
   },
