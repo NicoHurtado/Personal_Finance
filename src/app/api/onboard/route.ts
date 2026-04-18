@@ -95,7 +95,13 @@ export async function POST(request: Request) {
     // 2. Create accounts
     const accountMap: Record<string, string> = {};
     for (const acct of payload.accounts) {
-      let existing = await Account.findOne({ userId, slug: acct.slug });
+      // Credit cards must end in -tc (required by the routing convention)
+      const finalSlug =
+        acct.type === "credit_card" && !acct.slug.endsWith("-tc")
+          ? `${acct.slug}-tc`
+          : acct.slug;
+
+      let existing = await Account.findOne({ userId, slug: finalSlug });
       if (!existing) {
         const config: Record<string, unknown> = { ...acct.config };
         if (acct.colorGradientEnd) config.colorGradientEnd = acct.colorGradientEnd;
@@ -105,7 +111,7 @@ export async function POST(request: Request) {
 
         existing = await Account.create({
           userId,
-          slug: acct.slug,
+          slug: finalSlug,
           name: acct.name,
           type: acct.type,
           currency: acct.currency,
@@ -114,11 +120,13 @@ export async function POST(request: Request) {
           config,
           sortOrder: acct.sortOrder,
         });
-        results[`account_${acct.slug}`] = "Created";
+        results[`account_${finalSlug}`] = "Created";
       } else {
-        results[`account_${acct.slug}`] = "Exists";
+        results[`account_${finalSlug}`] = "Exists";
       }
+      // Map both the original slug and the final slug so transactions resolve correctly
       accountMap[acct.slug] = String(existing._id);
+      accountMap[finalSlug] = String(existing._id);
     }
 
     // 3. Categories
