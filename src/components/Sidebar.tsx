@@ -160,7 +160,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom">
         {mobileItems.map((item) => {
           const active = isActive(item.href);
           return (
