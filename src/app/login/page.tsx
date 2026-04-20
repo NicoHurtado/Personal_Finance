@@ -2,9 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useT } from "@/hooks/useT";
 
 export default function LoginPage() {
   const router = useRouter();
+  const t = useT();
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -27,7 +29,7 @@ export default function LoginPage() {
     e.preventDefault();
     const trimmed = code.trim();
     if (trimmed.length < 4) {
-      setError("El código debe tener al menos 4 caracteres");
+      setError(t.login.errorMin);
       return;
     }
     setError("");
@@ -43,14 +45,14 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Código incorrecto");
+        setError(data.error || t.login.errorWrong);
         setLoading(false);
         return;
       }
 
       router.replace("/dashboard");
     } catch {
-      setError("Error de conexión. Intenta de nuevo.");
+      setError(t.login.errorConnection);
       setLoading(false);
     }
   }
@@ -67,15 +69,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-[#F4F9FA] flex items-center justify-center px-4">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-8">
-          <h1 className="text-[22px] font-semibold text-[#0A1519]">Finance</h1>
-          <p className="text-[13px] text-[#7A8B90] mt-1">Ingresa tu contraseña</p>
+          <h1 className="text-[22px] font-semibold text-[#0A1519]">{t.login.title}</h1>
+          <p className="text-[13px] text-[#7A8B90] mt-1">{t.login.subtitle}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#E6EAEB] p-6 shadow-[0_4px_24px_rgba(10,21,25,0.04)]">
           <div className="space-y-4">
             <div>
               <label htmlFor="code" className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">
-                Contraseña
+                {t.login.passwordLabel}
               </label>
               <input
                 id="code"
@@ -89,7 +91,7 @@ export default function LoginPage() {
                   setError("");
                 }}
                 className="w-full px-3.5 py-2.5 text-[14px] text-[#0A1519] bg-[#F4F9FA] border border-[#E6EAEB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#025864]/20 focus:border-[#025864] transition-colors placeholder:text-[#A0AEB3]"
-                placeholder="Contraseña"
+                placeholder={t.login.passwordPlaceholder}
               />
             </div>
 
@@ -107,15 +109,14 @@ export default function LoginPage() {
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Entrando...
+                  {t.login.submitting}
                 </span>
               ) : (
-                "Entrar"
+                t.login.submit
               )}
             </button>
           </div>
         </form>
-
       </div>
     </div>
   );

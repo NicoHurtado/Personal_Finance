@@ -5,6 +5,8 @@ import Link from "next/link";
 import Card from "@/components/Card";
 import { CardSkeleton } from "@/components/Skeleton";
 import { formatCOP } from "@/lib/format";
+import { useT } from "@/hooks/useT";
+
 interface FixedIncomeAccount {
   _id: string;
   slug: string;
@@ -19,6 +21,7 @@ interface FixedIncomeAccount {
 }
 
 export default function FixedIncomePage() {
+  const t = useT();
   const [accounts, setAccounts] = useState<FixedIncomeAccount[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,8 +42,8 @@ export default function FixedIncomePage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-heading text-[#0A1519] mb-1">Fixed Income</h1>
-        <p className="text-sm text-[#7A8B90] mb-8">Your fixed income products</p>
+        <h1 className="text-heading text-[#0A1519] mb-1">{t.fixedIncome.title}</h1>
+        <p className="text-sm text-[#7A8B90] mb-8">{t.fixedIncome.subtitle}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[900px]">
           <CardSkeleton />
         </div>
@@ -50,8 +53,8 @@ export default function FixedIncomePage() {
 
   return (
     <div>
-      <h1 className="text-heading text-[#0A1519] mb-1">Fixed Income</h1>
-      <p className="text-sm text-[#7A8B90] mb-8">Your fixed income products</p>
+      <h1 className="text-heading text-[#0A1519] mb-1">{t.fixedIncome.title}</h1>
+      <p className="text-sm text-[#7A8B90] mb-8">{t.fixedIncome.subtitle}</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-[900px]">
         {accounts.map((acct) => {
@@ -71,12 +74,12 @@ export default function FixedIncomePage() {
                     )}
                   </div>
                 </div>
-                <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-1">Balance</p>
+                <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-1">{t.fixedIncome.balance}</p>
                 <p className="text-xl font-semibold text-[#00A85A] tabular-nums">
                   {formatCOP(acct.balance ?? 0)}
                 </p>
                 <div className="mt-4 flex items-center gap-1 text-[12px] text-[#7A8B90] group-hover:text-[#0A1519] transition-colors">
-                  <span>View details</span>
+                  <span>{t.fixedIncome.viewDetails}</span>
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                   </svg>

@@ -15,6 +15,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import { useT } from "@/hooks/useT";
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface Holding {
@@ -73,6 +74,7 @@ const ROWS_PER_PAGE = 10;
 
 // ── Component ──────────────────────────────────────────────────────────
 export default function StocksPage() {
+  const t = useT();
   const [holdings, setHoldings] = useState<HoldingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [trm, setTrm] = useState<number>(0);
@@ -268,7 +270,7 @@ export default function StocksPage() {
     const costBasisPerShare = parseFloat(addCost);
 
     if (!ticker || !companyName || isNaN(shares) || isNaN(costBasisPerShare) || shares <= 0 || costBasisPerShare <= 0) {
-      setAddError("All fields are required and must be valid.");
+      setAddError(t.stocks.allFieldsRequired);
       return;
     }
 
@@ -278,12 +280,12 @@ export default function StocksPage() {
       const res = await fetch(`/api/stocks?tickers=${ticker}`);
       const data: StockQuote[] = await res.json();
       if (!data.length || data[0].error) {
-        setAddError("Invalid ticker");
+        setAddError(t.stocks.invalidTicker);
         setAddSaving(false);
         return;
       }
     } catch {
-      setAddError("Could not validate ticker");
+      setAddError(t.stocks.couldNotValidate);
       setAddSaving(false);
       return;
     }
@@ -318,7 +320,7 @@ export default function StocksPage() {
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-heading text-[#0A1519]">Stocks</h1>
+        <h1 className="text-heading text-[#0A1519]">{t.stocks.title}</h1>
         <p className="text-sm text-[#7A8B90] mt-1">{brokerageName}</p>
       </div>
 
@@ -333,24 +335,24 @@ export default function StocksPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Portfolio Value (USD)</p>
+              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.portfolioValueUSD}</p>
               <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatUSD(portfolioUSD)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Portfolio Value (COP)</p>
+              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.portfolioValueCOP}</p>
               <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatCOP(portfolioCOP)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">TRM (COP/USD)</p>
+              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.trm}</p>
               <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatCOP(trm)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Today&apos;s P&amp;L</p>
+              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.todayPL}</p>
               <p className={`text-xl font-semibold tabular-nums ${plColor(todayPL)}`}>{formatUSD(todayPL)}</p>
             </Card>
           </div>
           {priceTimestamp && (
-            <p className="text-[11px] text-[#7A8B90]">Prices as of {priceTimestamp}</p>
+            <p className="text-[11px] text-[#7A8B90]">{t.stocks.pricesAsOf} {priceTimestamp}</p>
           )}
         </>
       )}
@@ -361,43 +363,43 @@ export default function StocksPage() {
       ) : (
         <Card>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[15px] font-medium text-[#0A1519]">My Holdings</h2>
+            <h2 className="text-[15px] font-medium text-[#0A1519]">{t.stocks.myHoldings}</h2>
             <button
               onClick={() => setAddOpen(true)}
               className="px-4 py-2 text-sm font-medium text-white bg-[#025864] rounded-lg hover:bg-[#014750] transition-colors"
             >
-              Add Holding
+              {t.stocks.addHolding}
             </button>
           </div>
 
           <TableFilters
             search={search}
             onSearchChange={setSearch}
-            searchPlaceholder="Search by ticker or company..."
+            searchPlaceholder={t.stocks.searchPlaceholder}
             filterValue={plFilter}
             onFilterChange={setPlFilter}
             filterOptions={[
-              { label: "Winners", value: "winners" },
-              { label: "Losers", value: "losers" },
+              { label: t.stocks.winners, value: "winners" },
+              { label: t.stocks.losers, value: "losers" },
             ]}
-            filterLabel="P&L"
+            filterLabel={t.stocks.filterLabel}
           />
 
           <div className="overflow-x-auto -mx-5 md:-mx-6">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-[#E6EAEB] text-left">
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Ticker</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Company</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Shares</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Price</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Value (USD)</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Value (COP)</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Cost Basis</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">P&amp;L</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">P&amp;L %</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Day %</th>
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.stocks.ticker}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.stocks.company}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.shares}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.price}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.valueUSD}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.valueCOP}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.costBasis}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.pl}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.plPercent}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.dayPercent}</th>
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -459,13 +461,13 @@ export default function StocksPage() {
                               onClick={() => saveEdit(h._id)}
                               className="text-[13px] font-medium text-[#0A1519] hover:underline"
                             >
-                              Save
+                              {t.common.save}
                             </button>
                             <button
                               onClick={cancelEdit}
                               className="text-[13px] text-[#7A8B90] hover:underline"
                             >
-                              Cancel
+                              {t.common.cancel}
                             </button>
                           </div>
                         ) : (
@@ -474,13 +476,13 @@ export default function StocksPage() {
                               onClick={() => startEdit(h)}
                               className="text-[13px] text-[#4A5B60] hover:text-[#0A1519] hover:underline"
                             >
-                              Edit
+                              {t.common.edit}
                             </button>
                             <button
                               onClick={() => setDeleteTarget(h)}
                               className="text-[13px] text-[#E5484D] hover:underline"
                             >
-                              Delete
+                              {t.common.delete}
                             </button>
                           </div>
                         )}
@@ -491,7 +493,7 @@ export default function StocksPage() {
                 {pagedHoldings.length === 0 && (
                   <tr>
                     <td colSpan={11} className="py-10 text-center text-[#7A8B90] text-sm">
-                      {search || plFilter ? "No matching holdings." : "No holdings yet. Add one to get started."}
+                      {search || plFilter ? t.stocks.noMatchingHoldings : t.stocks.noHoldings}
                     </td>
                   </tr>
                 )}
@@ -506,7 +508,7 @@ export default function StocksPage() {
       {/* Portfolio Allocation Chart */}
       {!loading && holdings.length > 0 && (
         <Card>
-          <h2 className="text-[15px] font-medium text-[#0A1519] mb-5">Portfolio Allocation</h2>
+          <h2 className="text-[15px] font-medium text-[#0A1519] mb-5">{t.stocks.portfolioAllocation}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -552,25 +554,25 @@ export default function StocksPage() {
       <Modal
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Delete Holding"
+        title={t.stocks.deleteHolding}
       >
         <p className="text-sm text-[#4A5B60] mb-5">
-          Are you sure you want to delete{" "}
-          <span className="font-semibold text-[#0A1519]">{deleteTarget?.ticker}</span>?
-          This action cannot be undone.
+          {t.stocks.deleteConfirmText}{" "}
+          <span className="font-semibold text-[#0A1519]">{deleteTarget?.ticker}</span>?{" "}
+          {t.common.thisActionCannotBeUndone}
         </p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setDeleteTarget(null)}
             className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors"
           >
-            Cancel
+            {t.common.cancel}
           </button>
           <button
             onClick={confirmDelete}
             className="px-4 py-2 text-sm text-white bg-[#E5484D] rounded-lg hover:bg-[#CC3B40] transition-colors"
           >
-            Delete
+            {t.common.delete}
           </button>
         </div>
       </Modal>
@@ -582,11 +584,11 @@ export default function StocksPage() {
           setAddOpen(false);
           resetAddForm();
         }}
-        title="Add Holding"
+        title={t.stocks.addHolding}
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Ticker</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.ticker}</label>
             <input
               type="text"
               value={addTicker}
@@ -596,7 +598,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Company Name</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.companyName}</label>
             <input
               type="text"
               value={addCompany}
@@ -606,7 +608,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Shares</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.shares}</label>
             <input
               type="number"
               value={addShares}
@@ -618,7 +620,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Cost Basis per Share (USD)</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.costPerShare}</label>
             <input
               type="number"
               value={addCost}
@@ -640,14 +642,14 @@ export default function StocksPage() {
               }}
               className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors"
             >
-              Cancel
+              {t.common.cancel}
             </button>
             <button
               onClick={handleAdd}
               disabled={addSaving}
               className="px-4 py-2 text-sm text-white bg-[#025864] rounded-lg hover:bg-[#014750] transition-colors disabled:opacity-50"
             >
-              {addSaving ? "Validating..." : "Add"}
+              {addSaving ? t.common.validating : t.common.add}
             </button>
           </div>
         </div>

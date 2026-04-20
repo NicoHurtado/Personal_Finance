@@ -6,6 +6,7 @@ import Card from "@/components/Card";
 import { formatCOP, formatUSD } from "@/lib/format";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AccountCard } from "@/components/CardVisuals";
+import { useT } from "@/hooks/useT";
 
 interface Account {
   _id: string;
@@ -19,6 +20,7 @@ interface Account {
 }
 
 export default function DebitHubPage() {
+  const t = useT();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,8 +42,8 @@ export default function DebitHubPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-heading text-[#0A1519] mb-1">Debit</h1>
-        <p className="text-sm text-[#7A8B90] mb-8">Your debit accounts</p>
+        <h1 className="text-heading text-[#0A1519] mb-1">{t.savings.title}</h1>
+        <p className="text-sm text-[#7A8B90] mb-8">{t.savings.subtitle}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[900px]">
           <CardSkeleton />
           <CardSkeleton />

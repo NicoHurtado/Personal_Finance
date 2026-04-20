@@ -6,6 +6,7 @@ import Card from "@/components/Card";
 import { formatCOP, formatUSD } from "@/lib/format";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AccountCard } from "@/components/CardVisuals";
+import { useT } from "@/hooks/useT";
 
 interface Account {
   _id: string;
@@ -19,6 +20,7 @@ interface Account {
 }
 
 export default function CreditCardsPage() {
+  const t = useT();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -40,8 +42,8 @@ export default function CreditCardsPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-heading text-[#0A1519] mb-1">Credit Cards</h1>
-        <p className="text-sm text-[#7A8B90] mb-8">Manage your credit cards</p>
+        <h1 className="text-heading text-[#0A1519] mb-1">{t.creditCards.title}</h1>
+        <p className="text-sm text-[#7A8B90] mb-8">{t.creditCards.subtitle}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <CardSkeleton />
           <CardSkeleton />

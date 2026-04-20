@@ -7,6 +7,8 @@ import { AccountCard } from "@/components/CardVisuals";
 import { CardSkeleton, TableSkeleton, ChartSkeleton, Skeleton } from "@/components/Skeleton";
 import { formatCOP, formatUSD, formatDate } from "@/lib/format";
 import { computeCajitaBalance, type CajitaConfig } from "@/lib/cajita";
+import { useT } from "@/hooks/useT";
+import { useLangStore } from "@/store/langStore";
 import {
   ResponsiveContainer,
   XAxis,
@@ -97,6 +99,8 @@ function monthLabel(ym: string): string {
 /* ---------- Component ---------- */
 
 export default function DashboardPage() {
+  const t = useT();
+  const { lang } = useLangStore();
   const [loading, setLoading] = useState(true);
   const [chartView, setChartView] = useState<"month" | "year">("month");
   const [selectedMonth, setSelectedMonth] = useState<string>(ymKey(new Date()));
@@ -385,9 +389,12 @@ export default function DashboardPage() {
   /* ---------- Render ---------- */
 
   const today = new Date();
-  const dateStr = today.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const dateStr = today.toLocaleDateString(lang === "es" ? "es-CO" : "en-US", { weekday: "long", month: "long", day: "numeric" });
   const greetingHour = today.getHours();
-  const greeting = greetingHour < 12 ? "Good morning" : greetingHour < 19 ? "Good afternoon" : "Good evening";
+  const greetingMap = lang === "es"
+    ? { morning: "Buenos días", afternoon: "Buenas tardes", evening: "Buenas noches" }
+    : { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" };
+  const greeting = greetingHour < 12 ? greetingMap.morning : greetingHour < 19 ? greetingMap.afternoon : greetingMap.evening;
 
   return (
     <div className="space-y-6">
@@ -417,33 +424,33 @@ export default function DashboardPage() {
 
         <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div>
-            <p className="text-[12px] text-white/60 mb-2">Total Balance</p>
+            <p className="text-[12px] text-white/60 mb-2">{t.dashboard.totalCapital}</p>
             <p className="text-display tabular-nums">{formatCOP(netCapital)}</p>
 
             <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-2">
               {liquidityCOP !== 0 && (
                 <div>
-                  <p className="text-[11px] text-white/60">Debit</p>
+                  <p className="text-[11px] text-white/60">{t.nav.debit}</p>
                   <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(liquidityCOP)}</p>
                   {liquidityUSD !== 0 && <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(liquidityUSD)} in USD</p>}
                 </div>
               )}
               {fixedIncomeCOP !== 0 && (
                 <div>
-                  <p className="text-[11px] text-white/60">Fixed Income</p>
+                  <p className="text-[11px] text-white/60">{t.nav.fixedIncome}</p>
                   <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(fixedIncomeCOP)}</p>
                 </div>
               )}
               {hapiCOP !== 0 && (
                 <div>
-                  <p className="text-[11px] text-white/60">Investments</p>
+                  <p className="text-[11px] text-white/60">{t.nav.investments}</p>
                   <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(hapiCOP)}</p>
                   <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(hapiUSD)}</p>
                 </div>
               )}
               {debtAbs > 0 && (
                 <div>
-                  <p className="text-[11px] text-white/60">Debt</p>
+                  <p className="text-[11px] text-white/60">{t.dashboard.totalDebt}</p>
                   <p className="text-[15px] font-medium tabular-nums text-[#FF9FA3]">{formatCOP(debtAbs)}</p>
                 </div>
               )}
@@ -453,19 +460,19 @@ export default function DashboardPage() {
           <div className="grid grid-cols-2 gap-2">
             <Link href="/credit-cards" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-              Cards
+              {t.nav.cards}
             </Link>
             <Link href="/savings" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9.75l9-6 9 6M4.5 10.5v9.75a.75.75 0 00.75.75h3.75V15a1.5 1.5 0 013 0v6h3.75a.75.75 0 00.75-.75V10.5" /></svg>
-              Debit
+              {t.nav.debit}
             </Link>
             <Link href="/fixed-income" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              Fixed Income
+              {t.nav.fixedIncome}
             </Link>
             <Link href="/stocks" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
-              Stocks
+              {t.nav.stocks}
             </Link>
           </div>
         </div>
@@ -475,30 +482,30 @@ export default function DashboardPage() {
       <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18" /></svg>}
-          label="Debit"
+          label={t.nav.debit}
           value={formatCOP(liquidityCOP)}
           secondary={liquidityUSD !== 0 ? `${formatUSD(liquidityUSD)} in USD` : undefined}
-          period="Savings"
+          period={t.savings.title}
         />
         <StatCard
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-          label="Fixed Income"
+          label={t.nav.fixedIncome}
           value={formatCOP(fixedIncomeCOP)}
           growthAmount={fixedIncomeGrowth}
-          period="Así ha crecido"
+          period={t.dashboard.hasGrown}
         />
         <StatCard
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
-          label="Investments"
+          label={t.dashboard.investments}
           value={formatCOP(hapiCOP)}
           secondary={formatUSD(hapiUSD)}
-          period="Stocks"
+          period={t.nav.stocks}
         />
         <StatCard
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>}
-          label="Total Debt"
+          label={t.dashboard.totalDebt}
           value={formatCOP(debtAbs)}
-          period="Credit cards"
+          period={t.dashboard.creditCards}
           valueClassName="text-[#E5484D]"
         />
       </section>
@@ -507,7 +514,7 @@ export default function DashboardPage() {
       <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card className="lg:col-span-3" padding="lg">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <h2 className="text-[13px] font-semibold text-[#0A1519] tracking-tight">Cash Flow</h2>
+            <h2 className="text-[13px] font-semibold text-[#0A1519] tracking-tight">{t.dashboard.cashFlow}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               {chartView === "month" ? (
                 <div className="flex items-center gap-1">
@@ -528,13 +535,13 @@ export default function DashboardPage() {
               )}
               <div className="w-px h-3.5 bg-[#E6EAEB]" />
               <div className="flex items-center bg-[#F4F9FA] rounded-lg p-0.5 gap-0.5">
-                <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>Monthly</button>
-                <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>Yearly</button>
+                <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>{t.common.monthly}</button>
+                <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>{t.common.yearly}</button>
               </div>
               <div className="w-px h-3.5 bg-[#E6EAEB]" />
               <div className="flex items-center gap-3">
-                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[#025864]" /> Capital</span>
-                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#00D47E] opacity-80" /> Expenses</span>
+                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[#025864]" /> {t.dashboard.capital}</span>
+                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#00D47E] opacity-80" /> {t.dashboard.expenses}</span>
               </div>
             </div>
           </div>
@@ -576,9 +583,9 @@ export default function DashboardPage() {
               <svg className="w-4 h-4 text-[#025864]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[#9AABAD] mb-0.5">Capital</p>
+              <p className="text-[11px] text-[#9AABAD] mb-0.5">{t.dashboard.capital}</p>
               <p className="text-[17px] font-semibold text-[#0A1519] tabular-nums truncate leading-tight">{formatCOP(netCapital)}</p>
-              <p className="text-[10px] text-[#B0BCBF] mt-0.5">Current</p>
+              <p className="text-[10px] text-[#B0BCBF] mt-0.5">{t.dashboard.currentBalance}</p>
             </div>
           </Card>
           <Card padding="md" className="flex items-center gap-3.5">
@@ -586,7 +593,7 @@ export default function DashboardPage() {
               <svg className="w-4 h-4 text-[#00A85A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" /></svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[#9AABAD] mb-0.5">Expenses</p>
+              <p className="text-[11px] text-[#9AABAD] mb-0.5">{t.dashboard.expenses}</p>
               <p className="text-[17px] font-semibold text-[#0A1519] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
               <p className="text-[10px] text-[#B0BCBF] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `Year ${selectedYear}`}</p>
             </div>
@@ -600,12 +607,12 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-[#4A5B60]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM7.5 6.75h12M7.5 12h12M7.5 17.25h12" /></svg>
-              <h2 className="text-title text-[#0A1519]">Recent Activity</h2>
+              <h2 className="text-title text-[#0A1519]">{t.dashboard.recentActivity}</h2>
             </div>
-            <span className="text-[11px] text-[#7A8B90]">{recentActivity.length} recientes</span>
+            <span className="text-[11px] text-[#7A8B90]">{recentActivity.length}</span>
           </div>
           {recentActivity.length === 0 ? (
-            <p className="text-sm text-[#7A8B90] py-10 text-center">No transactions yet.</p>
+            <p className="text-sm text-[#7A8B90] py-10 text-center">{t.dashboard.noRecentActivity}</p>
           ) : (
             <div className="divide-y divide-[#EEF1F1] max-h-[480px] overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
               {recentActivity.map((row, i) => (
