@@ -67,6 +67,7 @@ export default function CajitaPage() {
   const [addType, setAddType] = useState<"Deposit" | "Withdrawal">("Deposit");
   const [addError, setAddError] = useState("");
   const [addSubmitting, setAddSubmitting] = useState(false);
+  const [addIsNotExpense, setAddIsNotExpense] = useState(false);
 
   // Inline edit
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -227,7 +228,7 @@ export default function CajitaPage() {
           description: addType === "Withdrawal" ? "Withdrawal" : "Deposit",
           amount,
           type: addType === "Withdrawal" ? "Expense" : "Deposit",
-          metadata: { amountDeposited: addType === "Withdrawal" ? -amount : amount },
+          metadata: { amountDeposited: addType === "Withdrawal" ? -amount : amount, ...(addIsNotExpense ? { isCardPayment: true } : {}) },
         }),
       });
       if (!res.ok) throw new Error("Failed to add");
@@ -235,6 +236,7 @@ export default function CajitaPage() {
       setAddDate("");
       setAddAmount("");
       setAddType("Deposit");
+      setAddIsNotExpense(false);
       await fetchDeposits();
     } catch {
       setAddError("Failed to save. Please try again.");
@@ -530,6 +532,7 @@ export default function CajitaPage() {
           setAddModalOpen(false);
           setAddError("");
           setAddType("Deposit");
+          setAddIsNotExpense(false);
         }}
         title={t.fixedIncome.addMovement}
       >
@@ -570,6 +573,15 @@ export default function CajitaPage() {
             />
           </div>
           {addError && <p className="text-[#E5484D] text-sm">{addError}</p>}
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={addIsNotExpense}
+              onChange={(e) => setAddIsNotExpense(e.target.checked)}
+              className="w-3.5 h-3.5 rounded accent-[#025864]"
+            />
+            <span className="text-[11px] text-[#7A8B90]">{t.savings.doNotCountAsExpense}</span>
+          </label>
           <button
             onClick={handleAdd}
             disabled={addSubmitting}
