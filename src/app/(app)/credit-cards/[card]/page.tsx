@@ -9,6 +9,8 @@ import TableFilters from "@/components/TableFilters";
 import { TableSkeleton, CardSkeleton } from "@/components/Skeleton";
 import { formatCOP, formatDate } from "@/lib/format";
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { useT } from "@/hooks/useT";
+import { useLangStore } from "@/store/langStore";
 
 interface Transaction {
   _id: string;
@@ -46,19 +48,22 @@ function toInputDate(d: string) {
   return new Date(d).toISOString().slice(0, 10);
 }
 
-function monthOptions() {
+function monthOptions(locale = "en-US") {
   const now = new Date();
   const opts: { label: string; value: string }[] = [];
   for (let i = 0; i < 12; i++) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-    const label = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+    const label = d.toLocaleString(locale, { month: "long", year: "numeric" });
     opts.push({ label, value });
   }
   return opts;
 }
 
 export default function CardDetailPage() {
+  const t = useT();
+  const { lang } = useLangStore();
+  const locale = lang === "es" ? "es-CO" : "en-US";
   const params = useParams();
   const cardKey = params.card as string;
   const accountSlug = cardKeyToSlug(cardKey);
@@ -173,10 +178,10 @@ export default function CardDetailPage() {
 
   const handleAddSubmit = async () => {
     const errs: Record<string, string> = {};
-    if (!addForm.date) errs.date = "Date is required";
-    if (!addForm.description.trim()) errs.description = "Description is required";
-    if (!addForm.amount || parseFloat(addForm.amount) <= 0) errs.amount = "Amount must be greater than 0";
-    if (!addForm.type) errs.type = "Type is required";
+    if (!addForm.date) errs.date = t.creditCards.errorDateRequired;
+    if (!addForm.description.trim()) errs.description = t.creditCards.errorDescriptionRequired;
+    if (!addForm.amount || parseFloat(addForm.amount) <= 0) errs.amount = t.creditCards.errorAmountRequired;
+    if (!addForm.type) errs.type = t.creditCards.errorDateRequired;
     setAddErrors(errs);
     if (Object.keys(errs).length) return;
 
@@ -256,7 +261,7 @@ export default function CardDetailPage() {
   });
 
   const pieData = Object.entries(catTotals).map(([key, value]) => ({
-    name: key === "__uncategorized" ? "Uncategorized" : (catMap[key]?.name || "Unknown"),
+    name: key === "__uncategorized" ? t.creditCards.uncategorized : (catMap[key]?.name || t.creditCards.uncategorized),
     value,
     color: key === "__uncategorized" ? "#D4D4D4" : (catMap[key]?.color || "#D4D4D4"),
   }));
@@ -265,7 +270,7 @@ export default function CardDetailPage() {
   const cutoffMonth = now.getDate() >= billingCutoffDay ? now.getMonth() + 1 : now.getMonth();
   const cutoffYear = cutoffMonth > 11 ? now.getFullYear() + 1 : now.getFullYear();
   const nextCutoff = new Date(cutoffYear, cutoffMonth > 11 ? 0 : cutoffMonth, billingCutoffDay);
-  const cutoffStr = nextCutoff.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const cutoffStr = nextCutoff.toLocaleDateString(locale, { month: "long", day: "numeric", year: "numeric" });
 
   const title = account?.name || cardKey;
 
@@ -293,48 +298,48 @@ export default function CardDetailPage() {
       {/* Header info row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Current Balance</p>
+          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.currentBalance}</p>
           <p className={`text-2xl font-semibold tabular-nums ${balance < 0 ? "text-[#E5484D]" : "text-[#00A85A]"}`}>
             {formatCOP(balance)}
           </p>
         </Card>
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Available Credit</p>
+          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.availableCredit}</p>
           <p className={`text-2xl font-semibold tabular-nums ${available >= 0 ? "text-[#00A85A]" : "text-[#E5484D]"}`}>
             {formatCOP(available)}
           </p>
-          <p className="text-[11px] text-[#7A8B90] mt-1">Limit: {formatCOP(creditLimit)}</p>
+          <p className="text-[11px] text-[#7A8B90] mt-1">{t.creditCards.limit}: {formatCOP(creditLimit)}</p>
         </Card>
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Billing Cutoff Date</p>
+          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.billingCutoffDate}</p>
           <p className="text-2xl font-semibold text-[#0A1519]">{billingCutoffDay}</p>
-          <p className="text-[11px] text-[#7A8B90] mt-1">Next: {cutoffStr}</p>
+          <p className="text-[11px] text-[#7A8B90] mt-1">{t.creditCards.next}: {cutoffStr}</p>
         </Card>
       </div>
 
       {/* Transactions */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">Transactions</h2>
+          <h2 className="text-[15px] font-medium text-[#0A1519]">{t.creditCards.transactions}</h2>
           <button
             onClick={() => setAddOpen(true)}
             className="px-4 py-2 text-sm font-medium bg-[#025864] text-white rounded-lg hover:bg-[#014750] transition-colors"
           >
-            Add Transaction
+            {t.creditCards.addTransaction}
           </button>
         </div>
 
         <TableFilters
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search by description..."
+          searchPlaceholder={t.creditCards.searchPlaceholder}
           filterValue={typeFilter}
           onFilterChange={setTypeFilter}
           filterOptions={[
-            { label: "Expense", value: "Expense" },
-            { label: "Payment", value: "Payment" },
+            { label: t.creditCards.expense, value: "Expense" },
+            { label: t.creditCards.payment, value: "Payment" },
           ]}
-          filterLabel="types"
+          filterLabel={t.creditCards.allTypes}
         />
         <div className="flex items-center gap-2 mb-4">
           <select
@@ -342,8 +347,8 @@ export default function CardDetailPage() {
             onChange={(e) => setCatFilter(e.target.value)}
             className="px-3 py-2 text-sm text-[#0A1519] bg-white border border-[#E6EAEB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#025864]"
           >
-            <option value="">All categories</option>
-            <option value="__uncategorized">Uncategorized</option>
+            <option value="">{t.creditCards.allCategories}</option>
+            <option value="__uncategorized">{t.creditCards.uncategorized}</option>
             {categories.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
@@ -354,12 +359,12 @@ export default function CardDetailPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b border-[#E6EAEB]">
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Date</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Description</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Amount</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Type</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Category</th>
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Actions</th>
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.date}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.description}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.amount}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.type}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.category}</th>
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.creditCards.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -382,15 +387,15 @@ export default function CardDetailPage() {
                       <td className="px-3 py-3">
                         <select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value as "Expense" | "Payment" })}
                           className={inputSmCls}>
-                          <option value="Expense">Expense</option>
-                          <option value="Payment">Payment</option>
+                          <option value="Expense">{t.creditCards.expense}</option>
+                          <option value="Payment">{t.creditCards.payment}</option>
                         </select>
                       </td>
                       <td className="px-3 py-3" />
                       <td className="px-5 md:px-6 py-3 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[#025864] text-white rounded-lg hover:bg-[#014750]">Save</button>
-                          <button onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5]">Cancel</button>
+                          <button onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[#025864] text-white rounded-lg hover:bg-[#014750]">{t.common.save}</button>
+                          <button onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5]">{t.common.cancel}</button>
                         </div>
                       </td>
                     </>
@@ -405,7 +410,7 @@ export default function CardDetailPage() {
                         <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-medium ${
                           tx.type === "Expense" ? "bg-[#FDEDEE] text-[#E5484D]" : "bg-[#E6FBF2] text-[#00A85A]"
                         }`}>
-                          {tx.type}
+                          {tx.type === "Expense" ? t.creditCards.expense : t.creditCards.payment}
                         </span>
                       </td>
                       <td className="px-3 py-3.5">
@@ -422,8 +427,8 @@ export default function CardDetailPage() {
                       </td>
                       <td className="px-5 md:px-6 py-3.5 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">Edit</button>
-                          <button onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[#E5484D] border border-[#FDEDEE] rounded-lg hover:bg-[#FDEDEE] transition-colors">Delete</button>
+                          <button onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{t.common.edit}</button>
+                          <button onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[#E5484D] border border-[#FDEDEE] rounded-lg hover:bg-[#FDEDEE] transition-colors">{t.common.delete}</button>
                         </div>
                       </td>
                     </>
@@ -431,7 +436,7 @@ export default function CardDetailPage() {
                 </tr>
               ))}
               {clientPaged.length === 0 && (
-                <tr><td colSpan={6} className="py-10 text-center text-[#7A8B90] text-sm">{search || typeFilter || catFilter ? "No matching transactions." : "No transactions yet"}</td></tr>
+                <tr><td colSpan={6} className="py-10 text-center text-[#7A8B90] text-sm">{search || typeFilter || catFilter ? t.creditCards.noMatchingTransactions : t.creditCards.noTransactions}</td></tr>
               )}
             </tbody>
           </table>
@@ -443,19 +448,19 @@ export default function CardDetailPage() {
       {/* Spending by Category */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">Spending by Category</h2>
+          <h2 className="text-[15px] font-medium text-[#0A1519]">{t.creditCards.spendingByCategory}</h2>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
             className={inputCls}
           >
-            {monthOptions().map((o) => (
+            {monthOptions(locale).map((o) => (
               <option key={o.value} value={o.value}>{o.label}</option>
             ))}
           </select>
         </div>
         {pieData.length === 0 ? (
-          <p className="text-[#7A8B90] text-sm text-center py-10">No expenses for this month</p>
+          <p className="text-[#7A8B90] text-sm text-center py-10">{t.creditCards.noExpensesThisMonth}</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -481,39 +486,39 @@ export default function CardDetailPage() {
       </Card>
 
       {/* Add Transaction Modal */}
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Transaction">
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t.creditCards.addTransaction}>
         <div className="space-y-4">
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Date</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.date}</label>
             <input type="date" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
               className={`w-full ${inputCls}`} />
             {addErrors.date && <p className="text-[#E5484D] text-xs mt-1">{addErrors.date}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Description</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.description}</label>
             <input type="text" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
               className={`w-full ${inputCls}`} />
             {addErrors.description && <p className="text-[#E5484D] text-xs mt-1">{addErrors.description}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Amount</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.amount}</label>
             <input type="number" min="0.01" step="0.01" value={addForm.amount} onChange={(e) => setAddForm({ ...addForm, amount: e.target.value })}
               className={`w-full ${inputCls}`} />
             {addErrors.amount && <p className="text-[#E5484D] text-xs mt-1">{addErrors.amount}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Type</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.type}</label>
             <select value={addForm.type} onChange={(e) => setAddForm({ ...addForm, type: e.target.value as "Expense" | "Payment" })}
               className={`w-full ${inputCls}`}>
-              <option value="Expense">Expense</option>
-              <option value="Payment">Payment</option>
+              <option value="Expense">{t.creditCards.expense}</option>
+              <option value="Payment">{t.creditCards.payment}</option>
             </select>
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Category (optional)</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.categoryOptional}</label>
             <select value={addForm.categoryId} onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
               className={`w-full ${inputCls}`}>
-              <option value="">None</option>
+              <option value="">{t.creditCards.noneCategory}</option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>{c.name}</option>
               ))}
@@ -521,21 +526,21 @@ export default function CardDetailPage() {
           </div>
           <button onClick={handleAddSubmit}
             className="w-full py-2.5 bg-[#025864] text-white rounded-lg font-medium hover:bg-[#014750] transition-colors text-sm">
-            Add Transaction
+            {t.creditCards.addTransaction}
           </button>
         </div>
       </Modal>
 
       {/* Delete Confirmation Modal */}
-      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title="Confirm Delete">
+      <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title={t.common.confirm}>
         <p className="text-sm text-[#4A5B60] mb-5">
-          Are you sure you want to delete &ldquo;{deleteTarget?.description}&rdquo;?
+          {t.creditCards.deleteConfirmText} &ldquo;{deleteTarget?.description}&rdquo;?
         </p>
         <div className="flex gap-2 justify-end">
           <button onClick={() => setDeleteTarget(null)}
-            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">Cancel</button>
+            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{t.common.cancel}</button>
           <button onClick={handleDelete}
-            className="px-4 py-2 text-sm text-white bg-[#E5484D] rounded-lg hover:bg-[#CC3B40] transition-colors">Delete</button>
+            className="px-4 py-2 text-sm text-white bg-[#E5484D] rounded-lg hover:bg-[#CC3B40] transition-colors">{t.common.delete}</button>
         </div>
       </Modal>
     </div>

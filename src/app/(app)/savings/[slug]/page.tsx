@@ -8,6 +8,8 @@ import Pagination from "@/components/Pagination";
 import { CardSkeleton, TableSkeleton } from "@/components/Skeleton";
 import TableFilters from "@/components/TableFilters";
 import { formatCOP, formatUSD, formatDate } from "@/lib/format";
+import { useT } from "@/hooks/useT";
+import { useLangStore } from "@/store/langStore";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -65,6 +67,8 @@ function formatCompact(v: number): string {
 }
 
 export default function DebitAccountPage() {
+  const tr = useT();
+  const { lang } = useLangStore();
   const params = useParams();
   const accountSlug = params.slug as string;
 
@@ -136,17 +140,19 @@ export default function DebitAccountPage() {
 
   useEffect(() => { setClientPage(1); }, [search, typeFilter]);
 
+  const locale = lang === "es" ? "es-CO" : "en-US";
+
   const monthOptions = useMemo(() => {
     const opts: { label: string; value: string }[] = [];
     const now = new Date();
     for (let i = 0; i < 12; i++) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleString("en-US", { month: "long", year: "numeric" });
+      const label = d.toLocaleString(locale, { month: "long", year: "numeric" });
       opts.push({ label, value });
     }
     return opts;
-  }, []);
+  }, [locale]);
 
   const chartData = useMemo(() => {
     const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -269,7 +275,7 @@ export default function DebitAccountPage() {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-heading text-[#0A1519]">Debit</h1>
+          <h1 className="text-heading text-[#0A1519]">{tr.savings.title}</h1>
           <p className="text-[#7A8B90] text-sm mt-1">{account?.name || accountSlug}</p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -283,12 +289,12 @@ export default function DebitAccountPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-heading text-[#0A1519]">Debit</h1>
+        <h1 className="text-heading text-[#0A1519]">{tr.savings.title}</h1>
         <p className="text-[#7A8B90] text-sm mt-1">{account?.name || accountSlug} {account?.currency ? `· ${account.currency}` : ""}</p>
       </div>
 
       <Card className="max-w-[440px] flex flex-col items-center justify-center">
-        <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Current Balance</p>
+        <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{tr.savings.currentBalance}</p>
         <p className={`text-3xl font-semibold tabular-nums ${balance >= 0 ? "text-[#00A85A]" : "text-[#E5484D]"}`}>
           {fmt(balance)}
         </p>
@@ -299,37 +305,37 @@ export default function DebitAccountPage() {
 
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">Transaction History</h2>
+          <h2 className="text-[15px] font-medium text-[#0A1519]">{tr.savings.transactionHistory}</h2>
           <button
             onClick={() => { setAddForm({ ...emptyForm }); setAddErrors({}); setAddOpen(true); }}
             className="px-4 py-2 text-sm font-medium bg-[#025864] text-white rounded-lg hover:bg-[#014750] transition-colors"
           >
-            Add Transaction
+            {tr.savings.addTransaction}
           </button>
         </div>
 
         <TableFilters
           search={search}
           onSearchChange={setSearch}
-          searchPlaceholder="Search by description..."
+          searchPlaceholder={tr.savings.searchPlaceholder}
           filterValue={typeFilter}
           onFilterChange={setTypeFilter}
           filterOptions={[
-            { label: "Income", value: "Income" },
-            { label: "Expense", value: "Expense" },
+            { label: tr.savings.income, value: "Income" },
+            { label: tr.savings.expense, value: "Expense" },
           ]}
-          filterLabel="types"
+          filterLabel={tr.savings.filterLabel}
         />
 
         <div className="overflow-x-auto -mx-5 md:-mx-6">
           <table className="w-full text-sm">
             <thead>
               <tr className="text-left border-b border-[#E6EAEB]">
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Date</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Description</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Amount</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">Type</th>
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">Actions</th>
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{tr.savings.date}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{tr.savings.description}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{tr.savings.amount}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{tr.savings.type}</th>
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{tr.savings.actions}</th>
               </tr>
             </thead>
             <tbody>
@@ -354,18 +360,18 @@ export default function DebitAccountPage() {
                     <td className="px-3 py-3">
                       <select value={editForm.type} onChange={(e) => setEditForm({ ...editForm, type: e.target.value as "Income" | "Expense" })}
                         className={inputSmCls}>
-                        <option value="Income">Income</option>
-                        <option value="Expense">Expense</option>
+                        <option value="Income">{tr.savings.income}</option>
+                        <option value="Expense">{tr.savings.expense}</option>
                       </select>
                     </td>
                     <td className="px-5 md:px-6 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
                         <button onClick={handleEdit} disabled={editSubmitting}
                           className="px-2.5 py-1 text-xs bg-[#025864] text-white rounded-lg hover:bg-[#014750] disabled:opacity-50">
-                          {editSubmitting ? "..." : "Save"}
+                          {editSubmitting ? "..." : tr.common.save}
                         </button>
                         <button onClick={() => { setEditingId(null); setEditErrors({}); }}
-                          className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5]">Cancel</button>
+                          className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5]">{tr.common.cancel}</button>
                       </div>
                     </td>
                   </tr>
@@ -380,15 +386,15 @@ export default function DebitAccountPage() {
                       <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-medium ${
                         t.type === "Income" ? "bg-[#E6FBF2] text-[#00A85A]" : "bg-[#FDEDEE] text-[#E5484D]"
                       }`}>
-                        {t.type}
+                        {t.type === "Income" ? tr.savings.income : tr.savings.expense}
                       </span>
                     </td>
                     <td className="px-5 md:px-6 py-3.5 text-right">
                       <div className="flex gap-1.5 justify-end">
                         <button onClick={() => startEdit(t)}
-                          className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">Edit</button>
+                          className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{tr.common.edit}</button>
                         <button onClick={() => setDeleteId(t._id)}
-                          className="px-2.5 py-1 text-xs text-[#E5484D] border border-[#FDEDEE] rounded-lg hover:bg-[#FDEDEE] transition-colors">Delete</button>
+                          className="px-2.5 py-1 text-xs text-[#E5484D] border border-[#FDEDEE] rounded-lg hover:bg-[#FDEDEE] transition-colors">{tr.common.delete}</button>
                       </div>
                     </td>
                   </tr>
@@ -396,7 +402,7 @@ export default function DebitAccountPage() {
               )}
               {clientPaged.length === 0 && (
                 <tr><td colSpan={5} className="py-10 text-center text-[#7A8B90] text-sm">
-                  {search || typeFilter ? "No matching transactions." : "No transactions yet."}
+                  {search || typeFilter ? tr.savings.noMatchingTransactions : tr.savings.noTransactions}
                 </td></tr>
               )}
             </tbody>
@@ -407,7 +413,7 @@ export default function DebitAccountPage() {
 
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">Balance Over Time</h2>
+          <h2 className="text-[15px] font-medium text-[#0A1519]">{tr.savings.balanceOverTime}</h2>
           <div className="flex items-center gap-2">
             {chartView === "month" && (
               <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className={inputCls}>
@@ -417,11 +423,11 @@ export default function DebitAccountPage() {
             <div className="flex rounded-lg border border-[#E6EAEB] overflow-hidden">
               <button onClick={() => setChartView("month")}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${chartView === "month" ? "bg-[#025864] text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}>
-                Monthly
+                {tr.savings.monthly}
               </button>
               <button onClick={() => setChartView("year")}
                 className={`px-3 py-1.5 text-xs font-medium transition-colors ${chartView === "year" ? "bg-[#025864] text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}>
-                Yearly
+                {tr.savings.yearly}
               </button>
             </div>
           </div>
@@ -449,36 +455,36 @@ export default function DebitAccountPage() {
             </ResponsiveContainer>
           </div>
         ) : (
-          <div className="h-[280px] flex items-center justify-center text-[#7A8B90] text-sm">No data for this period</div>
+          <div className="h-[280px] flex items-center justify-center text-[#7A8B90] text-sm">{tr.common.noData}</div>
         )}
       </Card>
 
-      <Modal open={addOpen} onClose={() => setAddOpen(false)} title="Add Transaction">
+      <Modal open={addOpen} onClose={() => setAddOpen(false)} title={tr.savings.addTransaction}>
         <div className="space-y-4">
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Date</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{tr.savings.date}</label>
             <input type="date" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
               className={`w-full ${inputCls}`} />
             {addErrors.date && <p className="text-[#E5484D] text-xs mt-1">{addErrors.date}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Description</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{tr.savings.description}</label>
             <input type="text" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
-              placeholder="e.g. Monthly salary" className={`w-full ${inputCls}`} />
+              placeholder="" className={`w-full ${inputCls}`} />
             {addErrors.description && <p className="text-[#E5484D] text-xs mt-1">{addErrors.description}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Amount</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{tr.savings.amount}</label>
             <input type="number" value={addForm.amount} onChange={(e) => setAddForm({ ...addForm, amount: e.target.value })}
               placeholder="0" min="0" step="any" className={`w-full ${inputCls}`} />
             {addErrors.amount && <p className="text-[#E5484D] text-xs mt-1">{addErrors.amount}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">Type</label>
+            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{tr.savings.type}</label>
             <select value={addForm.type} onChange={(e) => setAddForm({ ...addForm, type: e.target.value as "Income" | "Expense" })}
               className={`w-full ${inputCls}`}>
-              <option value="Income">Income</option>
-              <option value="Expense">Expense</option>
+              <option value="Income">{tr.savings.income}</option>
+              <option value="Expense">{tr.savings.expense}</option>
             </select>
           </div>
           <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -488,23 +494,23 @@ export default function DebitAccountPage() {
               onChange={(e) => setAddIsCardPayment(e.target.checked)}
               className="w-3.5 h-3.5 rounded accent-[#025864]"
             />
-            <span className="text-[11px] text-[#7A8B90]">No contar como expense</span>
+            <span className="text-[11px] text-[#7A8B90]">{tr.savings.doNotCountAsExpense}</span>
           </label>
           <button onClick={handleAdd} disabled={addSubmitting}
             className="w-full py-2.5 bg-[#025864] text-white font-medium rounded-lg hover:bg-[#014750] transition-colors disabled:opacity-50 text-sm">
-            {addSubmitting ? "Adding..." : "Add Transaction"}
+            {addSubmitting ? tr.savings.adding : tr.savings.addTransaction}
           </button>
         </div>
       </Modal>
 
-      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title="Delete Transaction">
-        <p className="text-sm text-[#4A5B60] mb-5">Are you sure you want to delete this?</p>
+      <Modal open={!!deleteId} onClose={() => setDeleteId(null)} title={tr.savings.deleteTransaction}>
+        <p className="text-sm text-[#4A5B60] mb-5">{tr.savings.deleteConfirmText}</p>
         <div className="flex gap-2 justify-end">
           <button onClick={() => setDeleteId(null)}
-            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">Cancel</button>
+            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{tr.common.cancel}</button>
           <button onClick={handleDelete} disabled={deleteSubmitting}
             className="px-4 py-2 text-sm bg-[#E5484D] text-white rounded-lg hover:bg-[#CC3B40] disabled:opacity-50 transition-colors">
-            {deleteSubmitting ? "..." : "Delete"}
+            {deleteSubmitting ? "..." : tr.common.delete}
           </button>
         </div>
       </Modal>
