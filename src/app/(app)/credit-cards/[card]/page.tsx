@@ -263,7 +263,7 @@ export default function CardDetailPage() {
   const pieData = Object.entries(catTotals).map(([key, value]) => ({
     name: key === "__uncategorized" ? t.creditCards.uncategorized : (catMap[key]?.name || t.creditCards.uncategorized),
     value,
-    color: key === "__uncategorized" ? "#D4D4D4" : (catMap[key]?.color || "#D4D4D4"),
+    color: key === "__uncategorized" ? "var(--c-uncat)" : (catMap[key]?.color || "var(--c-uncat)"),
   }));
 
   const now = new Date();
@@ -277,7 +277,7 @@ export default function CardDetailPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-heading text-[#0A1519] mb-6">{title}</h1>
+        <h1 className="text-heading text-[var(--c-text)] mb-6">{title}</h1>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <CardSkeleton />
           <CardSkeleton />
@@ -288,42 +288,42 @@ export default function CardDetailPage() {
     );
   }
 
-  const inputCls = "border border-[#E6EAEB] rounded-lg px-3 py-2 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
-  const inputSmCls = "border border-[#E6EAEB] rounded-lg px-2 py-1 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
+  const inputCls = "border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
+  const inputSmCls = "border border-[var(--c-border)] rounded-lg px-2 py-1 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
 
   return (
     <div className="space-y-8">
-      <h1 className="text-heading text-[#0A1519]">{title}</h1>
+      <h1 className="text-heading text-[var(--c-text)]">{title}</h1>
 
       {/* Header info row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.currentBalance}</p>
-          <p className={`text-2xl font-semibold tabular-nums ${balance < 0 ? "text-[#E5484D]" : "text-[#00A85A]"}`}>
+          <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.creditCards.currentBalance}</p>
+          <p className={`text-2xl font-semibold tabular-nums ${balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"}`}>
             {formatCOP(balance)}
           </p>
         </Card>
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.availableCredit}</p>
-          <p className={`text-2xl font-semibold tabular-nums ${available >= 0 ? "text-[#00A85A]" : "text-[#E5484D]"}`}>
+          <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.creditCards.availableCredit}</p>
+          <p className={`text-2xl font-semibold tabular-nums ${available >= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
             {formatCOP(available)}
           </p>
-          <p className="text-[11px] text-[#7A8B90] mt-1">{t.creditCards.limit}: {formatCOP(creditLimit)}</p>
+          <p className="text-[11px] text-[var(--c-text-3)] mt-1">{t.creditCards.limit}: {formatCOP(creditLimit)}</p>
         </Card>
         <Card>
-          <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.creditCards.billingCutoffDate}</p>
-          <p className="text-2xl font-semibold text-[#0A1519]">{billingCutoffDay}</p>
-          <p className="text-[11px] text-[#7A8B90] mt-1">{t.creditCards.next}: {cutoffStr}</p>
+          <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.creditCards.billingCutoffDate}</p>
+          <p className="text-2xl font-semibold text-[var(--c-text)]">{billingCutoffDay}</p>
+          <p className="text-[11px] text-[var(--c-text-3)] mt-1">{t.creditCards.next}: {cutoffStr}</p>
         </Card>
       </div>
 
       {/* Transactions */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">{t.creditCards.transactions}</h2>
+          <h2 className="text-[15px] font-medium text-[var(--c-text)]">{t.creditCards.transactions}</h2>
           <button
             onClick={() => setAddOpen(true)}
-            className="px-4 py-2 text-sm font-medium bg-[#025864] text-white rounded-lg hover:bg-[#014750] transition-colors"
+            className="px-4 py-2 text-sm font-medium bg-[var(--c-brand)] text-white rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors"
           >
             {t.creditCards.addTransaction}
           </button>
@@ -345,7 +345,7 @@ export default function CardDetailPage() {
           <select
             value={catFilter}
             onChange={(e) => setCatFilter(e.target.value)}
-            className="px-3 py-2 text-sm text-[#0A1519] bg-white border border-[#E6EAEB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#025864]"
+            className="px-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
           >
             <option value="">{t.creditCards.allCategories}</option>
             <option value="__uncategorized">{t.creditCards.uncategorized}</option>
@@ -358,18 +358,18 @@ export default function CardDetailPage() {
         <div className="overflow-x-auto -mx-5 md:-mx-6">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-left border-b border-[#E6EAEB]">
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.date}</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.description}</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.amount}</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.type}</th>
-                <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.creditCards.category}</th>
-                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.creditCards.actions}</th>
+              <tr className="text-left border-b border-[var(--c-border)]">
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.creditCards.date}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.creditCards.description}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.creditCards.amount}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.creditCards.type}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.creditCards.category}</th>
+                <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.creditCards.actions}</th>
               </tr>
             </thead>
             <tbody>
               {clientPaged.map((tx) => (
-                <tr key={tx._id} className="border-t border-[#EEF1F1] hover:bg-[#F4F9FA] transition-colors">
+                <tr key={tx._id} className="border-t border-[var(--c-border-2)] hover:bg-[var(--c-surface-2)] transition-colors">
                   {editingId === tx._id ? (
                     <>
                       <td className="px-5 md:px-6 py-3">
@@ -394,21 +394,21 @@ export default function CardDetailPage() {
                       <td className="px-3 py-3" />
                       <td className="px-5 md:px-6 py-3 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[#025864] text-white rounded-lg hover:bg-[#014750]">{t.common.save}</button>
-                          <button onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5]">{t.common.cancel}</button>
+                          <button onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[var(--c-brand)] text-white rounded-lg hover:bg-[var(--c-brand-hov)]">{t.common.save}</button>
+                          <button onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)]">{t.common.cancel}</button>
                         </div>
                       </td>
                     </>
                   ) : (
                     <>
-                      <td className="px-5 md:px-6 py-3.5 whitespace-nowrap text-[13px] text-[#4A5B60] tabular-nums">{formatDate(tx.date)}</td>
-                      <td className="px-3 py-3.5 text-[13px] text-[#0A1519]">{tx.description}</td>
-                      <td className={`px-3 py-3.5 text-[13px] font-semibold tabular-nums ${tx.type === "Expense" ? "text-[#E5484D]" : "text-[#00A85A]"}`}>
+                      <td className="px-5 md:px-6 py-3.5 whitespace-nowrap text-[13px] text-[var(--c-text-2)] tabular-nums">{formatDate(tx.date)}</td>
+                      <td className="px-3 py-3.5 text-[13px] text-[var(--c-text)]">{tx.description}</td>
+                      <td className={`px-3 py-3.5 text-[13px] font-semibold tabular-nums ${tx.type === "Expense" ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"}`}>
                         {tx.amount > 0 ? "+" : ""}{formatCOP(tx.amount)}
                       </td>
                       <td className="px-3 py-3.5">
                         <span className={`inline-block px-2 py-1 rounded-md text-[10px] font-medium ${
-                          tx.type === "Expense" ? "bg-[#FDEDEE] text-[#E5484D]" : "bg-[#E6FBF2] text-[#00A85A]"
+                          tx.type === "Expense" ? "bg-[var(--c-expense-bg)] text-[var(--c-expense)]" : "bg-[var(--c-income-bg)] text-[var(--c-income)]"
                         }`}>
                           {tx.type === "Expense" ? t.creditCards.expense : t.creditCards.payment}
                         </span>
@@ -427,8 +427,8 @@ export default function CardDetailPage() {
                       </td>
                       <td className="px-5 md:px-6 py-3.5 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{t.common.edit}</button>
-                          <button onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[#E5484D] border border-[#FDEDEE] rounded-lg hover:bg-[#FDEDEE] transition-colors">{t.common.delete}</button>
+                          <button onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">{t.common.edit}</button>
+                          <button onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[var(--c-expense)] border border-[var(--c-expense-bg)] rounded-lg hover:bg-[var(--c-expense-bg)] transition-colors">{t.common.delete}</button>
                         </div>
                       </td>
                     </>
@@ -436,7 +436,7 @@ export default function CardDetailPage() {
                 </tr>
               ))}
               {clientPaged.length === 0 && (
-                <tr><td colSpan={6} className="py-10 text-center text-[#7A8B90] text-sm">{search || typeFilter || catFilter ? t.creditCards.noMatchingTransactions : t.creditCards.noTransactions}</td></tr>
+                <tr><td colSpan={6} className="py-10 text-center text-[var(--c-text-3)] text-sm">{search || typeFilter || catFilter ? t.creditCards.noMatchingTransactions : t.creditCards.noTransactions}</td></tr>
               )}
             </tbody>
           </table>
@@ -448,7 +448,7 @@ export default function CardDetailPage() {
       {/* Spending by Category */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
-          <h2 className="text-[15px] font-medium text-[#0A1519]">{t.creditCards.spendingByCategory}</h2>
+          <h2 className="text-[15px] font-medium text-[var(--c-text)]">{t.creditCards.spendingByCategory}</h2>
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -460,7 +460,7 @@ export default function CardDetailPage() {
           </select>
         </div>
         {pieData.length === 0 ? (
-          <p className="text-[#7A8B90] text-sm text-center py-10">{t.creditCards.noExpensesThisMonth}</p>
+          <p className="text-[var(--c-text-3)] text-sm text-center py-10">{t.creditCards.noExpensesThisMonth}</p>
         ) : (
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
@@ -478,8 +478,8 @@ export default function CardDetailPage() {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value: any) => formatCOP(Number(value))} contentStyle={{ borderRadius: "10px", border: "1px solid #E6EAEB", fontSize: 12, boxShadow: "0 4px 16px rgba(10,21,25,0.06)" }} />
-              <Legend formatter={(value: string) => <span className="text-xs text-[#4A5B60]">{value}</span>} />
+              <Tooltip formatter={(value: any) => formatCOP(Number(value))} contentStyle={{ borderRadius: "10px", border: "1px solid var(--c-border)", fontSize: 12, boxShadow: "0 4px 16px rgba(10,21,25,0.06)" }} />
+              <Legend formatter={(value: string) => <span className="text-xs text-[var(--c-text-2)]">{value}</span>} />
             </PieChart>
           </ResponsiveContainer>
         )}
@@ -489,25 +489,25 @@ export default function CardDetailPage() {
       <Modal open={addOpen} onClose={() => setAddOpen(false)} title={t.creditCards.addTransaction}>
         <div className="space-y-4">
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.date}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.date}</label>
             <input type="date" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
               className={`w-full ${inputCls}`} />
-            {addErrors.date && <p className="text-[#E5484D] text-xs mt-1">{addErrors.date}</p>}
+            {addErrors.date && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.date}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.description}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.description}</label>
             <input type="text" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
               className={`w-full ${inputCls}`} />
-            {addErrors.description && <p className="text-[#E5484D] text-xs mt-1">{addErrors.description}</p>}
+            {addErrors.description && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.description}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.amount}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.amount}</label>
             <input type="number" min="0.01" step="0.01" value={addForm.amount} onChange={(e) => setAddForm({ ...addForm, amount: e.target.value })}
               className={`w-full ${inputCls}`} />
-            {addErrors.amount && <p className="text-[#E5484D] text-xs mt-1">{addErrors.amount}</p>}
+            {addErrors.amount && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.amount}</p>}
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.type}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.type}</label>
             <select value={addForm.type} onChange={(e) => setAddForm({ ...addForm, type: e.target.value as "Expense" | "Payment" })}
               className={`w-full ${inputCls}`}>
               <option value="Expense">{t.creditCards.expense}</option>
@@ -515,7 +515,7 @@ export default function CardDetailPage() {
             </select>
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.creditCards.categoryOptional}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.categoryOptional}</label>
             <select value={addForm.categoryId} onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
               className={`w-full ${inputCls}`}>
               <option value="">{t.creditCards.noneCategory}</option>
@@ -525,7 +525,7 @@ export default function CardDetailPage() {
             </select>
           </div>
           <button onClick={handleAddSubmit}
-            className="w-full py-2.5 bg-[#025864] text-white rounded-lg font-medium hover:bg-[#014750] transition-colors text-sm">
+            className="w-full py-2.5 bg-[var(--c-brand)] text-white rounded-lg font-medium hover:bg-[var(--c-brand-hov)] transition-colors text-sm">
             {t.creditCards.addTransaction}
           </button>
         </div>
@@ -533,14 +533,14 @@ export default function CardDetailPage() {
 
       {/* Delete Confirmation Modal */}
       <Modal open={!!deleteTarget} onClose={() => setDeleteTarget(null)} title={t.common.confirm}>
-        <p className="text-sm text-[#4A5B60] mb-5">
+        <p className="text-sm text-[var(--c-text-2)] mb-5">
           {t.creditCards.deleteConfirmText} &ldquo;{deleteTarget?.description}&rdquo;?
         </p>
         <div className="flex gap-2 justify-end">
           <button onClick={() => setDeleteTarget(null)}
-            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">{t.common.cancel}</button>
+            className="px-4 py-2 text-sm border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">{t.common.cancel}</button>
           <button onClick={handleDelete}
-            className="px-4 py-2 text-sm text-white bg-[#E5484D] rounded-lg hover:bg-[#CC3B40] transition-colors">{t.common.delete}</button>
+            className="px-4 py-2 text-sm text-white bg-[var(--c-expense)] rounded-lg hover:bg-[var(--c-expense-hov)] transition-colors">{t.common.delete}</button>
         </div>
       </Modal>
     </div>

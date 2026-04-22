@@ -59,24 +59,24 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-[#F4F9FA] flex items-center justify-center">
-        <div className="w-5 h-5 border-2 border-[#025864] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen bg-[var(--c-surface-2)] flex items-center justify-center">
+        <div className="w-5 h-5 border-2 border-[var(--c-brand)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F4F9FA] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--c-surface-2)] flex items-center justify-center px-4">
       <div className="w-full max-w-[400px]">
         <div className="text-center mb-8">
-          <h1 className="text-[22px] font-semibold text-[#0A1519]">{t.login.title}</h1>
-          <p className="text-[13px] text-[#7A8B90] mt-1">{t.login.subtitle}</p>
+          <h1 className="text-[22px] font-semibold text-[var(--c-text)]">{t.login.title}</h1>
+          <p className="text-[13px] text-[var(--c-text-3)] mt-1">{t.login.subtitle}</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-[#E6EAEB] p-6 shadow-[0_4px_24px_rgba(10,21,25,0.04)]">
+        <form onSubmit={handleSubmit} className="bg-card rounded-2xl border border-[var(--c-border)] p-6 shadow-[0_4px_24px_rgba(10,21,25,0.04)]">
           <div className="space-y-4">
             <div>
-              <label htmlFor="code" className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">
+              <label htmlFor="code" className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">
                 {t.login.passwordLabel}
               </label>
               <input
@@ -90,21 +90,21 @@ export default function LoginPage() {
                   setCode(e.target.value);
                   setError("");
                 }}
-                className="w-full px-3.5 py-2.5 text-[14px] text-[#0A1519] bg-[#F4F9FA] border border-[#E6EAEB] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#025864]/20 focus:border-[#025864] transition-colors placeholder:text-[#A0AEB3]"
+                className="w-full px-3.5 py-2.5 text-[14px] text-[var(--c-text)] bg-[var(--c-surface-2)] border border-[var(--c-border)] rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--c-brand)]/20 focus:border-[var(--c-brand)] transition-colors placeholder:text-[var(--c-text-4)]"
                 placeholder={t.login.passwordPlaceholder}
               />
             </div>
 
             {error && (
-              <div className="px-3.5 py-2.5 bg-[#FFF1F0] border border-[#FFDAD6] rounded-xl">
-                <p className="text-[12px] text-[#C4232B] font-medium">{error}</p>
+              <div className="px-3.5 py-2.5 bg-[var(--c-error-bg)] border border-[var(--c-error-border)] rounded-xl">
+                <p className="text-[12px] text-[var(--c-error-text)] font-medium">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-[#025864] text-white text-[14px] font-medium rounded-xl hover:bg-[#01454F] focus:outline-none focus:ring-2 focus:ring-[#025864]/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 px-4 bg-[var(--c-brand)] text-white text-[14px] font-medium rounded-xl hover:bg-[#01454F] focus:outline-none focus:ring-2 focus:ring-[var(--c-brand)]/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
                 <span className="inline-flex items-center gap-2">

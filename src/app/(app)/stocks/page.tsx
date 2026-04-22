@@ -60,14 +60,14 @@ interface Account {
 }
 
 const PIE_COLORS = [
-  "#025864",
-  "#00D47E",
+  "var(--c-brand)",
+  "var(--c-grad2)",
   "#0A5A7A",
-  "#4A5B60",
-  "#4FB7C2",
-  "#7A8B90",
+  "var(--c-text-2)",
+  "var(--c-grad1)",
+  "var(--c-text-3)",
   "#A7C4C9",
-  "#CFD7D9",
+  "var(--c-sep)",
 ];
 
 const ROWS_PER_PAGE = 10;
@@ -310,18 +310,18 @@ export default function StocksPage() {
   }));
 
   // ── Color helper ─────────────────────────────────────────────────────
-  const plColor = (v: number) => (v >= 0 ? "text-[#00A85A]" : "text-[#E5484D]");
+  const plColor = (v: number) => (v >= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]");
 
-  const inputCls = "border border-[#E6EAEB] rounded-lg px-3 py-2 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
-  const inputSmCls = "border border-[#E6EAEB] rounded-lg px-2 py-1 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
+  const inputCls = "border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
+  const inputSmCls = "border border-[var(--c-border)] rounded-lg px-2 py-1 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
 
   // ── Render ───────────────────────────────────────────────────────────
   return (
     <div className="space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-heading text-[#0A1519]">{t.stocks.title}</h1>
-        <p className="text-sm text-[#7A8B90] mt-1">{brokerageName}</p>
+        <h1 className="text-heading text-[var(--c-text)]">{t.stocks.title}</h1>
+        <p className="text-sm text-[var(--c-text-3)] mt-1">{brokerageName}</p>
       </div>
 
       {/* Stat cards */}
@@ -335,24 +335,24 @@ export default function StocksPage() {
         <>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.portfolioValueUSD}</p>
-              <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatUSD(portfolioUSD)}</p>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.stocks.portfolioValueUSD}</p>
+              <p className="text-xl font-semibold text-[var(--c-text)] tabular-nums">{formatUSD(portfolioUSD)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.portfolioValueCOP}</p>
-              <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatCOP(portfolioCOP)}</p>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.stocks.portfolioValueCOP}</p>
+              <p className="text-xl font-semibold text-[var(--c-text)] tabular-nums">{formatCOP(portfolioCOP)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.trm}</p>
-              <p className="text-xl font-semibold text-[#0A1519] tabular-nums">{formatCOP(trm)}</p>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.stocks.trm}</p>
+              <p className="text-xl font-semibold text-[var(--c-text)] tabular-nums">{formatCOP(trm)}</p>
             </Card>
             <Card>
-              <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.stocks.todayPL}</p>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.stocks.todayPL}</p>
               <p className={`text-xl font-semibold tabular-nums ${plColor(todayPL)}`}>{formatUSD(todayPL)}</p>
             </Card>
           </div>
           {priceTimestamp && (
-            <p className="text-[11px] text-[#7A8B90]">{t.stocks.pricesAsOf} {priceTimestamp}</p>
+            <p className="text-[11px] text-[var(--c-text-3)]">{t.stocks.pricesAsOf} {priceTimestamp}</p>
           )}
         </>
       )}
@@ -363,10 +363,10 @@ export default function StocksPage() {
       ) : (
         <Card>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[15px] font-medium text-[#0A1519]">{t.stocks.myHoldings}</h2>
+            <h2 className="text-[15px] font-medium text-[var(--c-text)]">{t.stocks.myHoldings}</h2>
             <button
               onClick={() => setAddOpen(true)}
-              className="px-4 py-2 text-sm font-medium text-white bg-[#025864] rounded-lg hover:bg-[#014750] transition-colors"
+              className="px-4 py-2 text-sm font-medium text-white bg-[var(--c-brand)] rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors"
             >
               {t.stocks.addHolding}
             </button>
@@ -388,18 +388,18 @@ export default function StocksPage() {
           <div className="overflow-x-auto -mx-5 md:-mx-6">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E6EAEB] text-left">
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.stocks.ticker}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.stocks.company}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.shares}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.price}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.valueUSD}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.valueCOP}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.costBasis}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.pl}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.plPercent}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.dayPercent}</th>
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.stocks.actions}</th>
+                <tr className="border-b border-[var(--c-border)] text-left">
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.stocks.ticker}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.stocks.company}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.shares}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.price}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.valueUSD}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.valueCOP}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.costBasis}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.pl}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.plPercent}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.dayPercent}</th>
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.stocks.actions}</th>
                 </tr>
               </thead>
               <tbody>
@@ -408,9 +408,9 @@ export default function StocksPage() {
                   const preview = isEditing ? editPreview(h) : null;
 
                   return (
-                    <tr key={h._id} className="border-t border-[#EEF1F1] hover:bg-[#F4F9FA] transition-colors">
-                      <td className="px-5 md:px-6 py-3.5 font-medium text-[#0A1519] text-[13px]">{h.ticker}</td>
-                      <td className="px-3 py-3.5 text-[#4A5B60] text-[13px]">{h.companyName}</td>
+                    <tr key={h._id} className="border-t border-[var(--c-border-2)] hover:bg-[var(--c-surface-2)] transition-colors">
+                      <td className="px-5 md:px-6 py-3.5 font-medium text-[var(--c-text)] text-[13px]">{h.ticker}</td>
+                      <td className="px-3 py-3.5 text-[var(--c-text-2)] text-[13px]">{h.companyName}</td>
                       <td className="px-3 py-3.5 text-right text-[13px] tabular-nums">
                         {isEditing ? (
                           <input
@@ -433,7 +433,7 @@ export default function StocksPage() {
                       <td className="px-3 py-3.5 text-right text-[13px] tabular-nums">
                         {isEditing ? (
                           <div className="flex items-center justify-end gap-1">
-                            <span className="text-[#7A8B90] text-xs">$/sh</span>
+                            <span className="text-[var(--c-text-3)] text-xs">$/sh</span>
                             <input
                               type="number"
                               value={editCost}
@@ -459,13 +459,13 @@ export default function StocksPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => saveEdit(h._id)}
-                              className="text-[13px] font-medium text-[#0A1519] hover:underline"
+                              className="text-[13px] font-medium text-[var(--c-text)] hover:underline"
                             >
                               {t.common.save}
                             </button>
                             <button
                               onClick={cancelEdit}
-                              className="text-[13px] text-[#7A8B90] hover:underline"
+                              className="text-[13px] text-[var(--c-text-3)] hover:underline"
                             >
                               {t.common.cancel}
                             </button>
@@ -474,13 +474,13 @@ export default function StocksPage() {
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => startEdit(h)}
-                              className="text-[13px] text-[#4A5B60] hover:text-[#0A1519] hover:underline"
+                              className="text-[13px] text-[var(--c-text-2)] hover:text-[var(--c-text)] hover:underline"
                             >
                               {t.common.edit}
                             </button>
                             <button
                               onClick={() => setDeleteTarget(h)}
-                              className="text-[13px] text-[#E5484D] hover:underline"
+                              className="text-[13px] text-[var(--c-expense)] hover:underline"
                             >
                               {t.common.delete}
                             </button>
@@ -492,7 +492,7 @@ export default function StocksPage() {
                 })}
                 {pagedHoldings.length === 0 && (
                   <tr>
-                    <td colSpan={11} className="py-10 text-center text-[#7A8B90] text-sm">
+                    <td colSpan={11} className="py-10 text-center text-[var(--c-text-3)] text-sm">
                       {search || plFilter ? t.stocks.noMatchingHoldings : t.stocks.noHoldings}
                     </td>
                   </tr>
@@ -508,7 +508,7 @@ export default function StocksPage() {
       {/* Portfolio Allocation Chart */}
       {!loading && holdings.length > 0 && (
         <Card>
-          <h2 className="text-[15px] font-medium text-[#0A1519] mb-5">{t.stocks.portfolioAllocation}</h2>
+          <h2 className="text-[15px] font-medium text-[var(--c-text)] mb-5">{t.stocks.portfolioAllocation}</h2>
           <div className="h-80">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -533,7 +533,7 @@ export default function StocksPage() {
                   formatter={(value: any) => formatUSD(Number(value))}
                   contentStyle={{
                     borderRadius: "8px",
-                    border: "1px solid #E6EAEB",
+                    border: "1px solid var(--c-border)",
                     fontSize: 12,
                     boxShadow: "0 4px 12px rgba(0,0,0,0.04)",
                   }}
@@ -541,7 +541,7 @@ export default function StocksPage() {
                 <Legend
                   formatter={(value: string) => {
                     const item = pieData.find((d) => d.name === value);
-                    return <span className="text-xs text-[#4A5B60]">{value} - {item?.fullName ?? ""} ({formatPercent(item?.pct ?? 0)})</span>;
+                    return <span className="text-xs text-[var(--c-text-2)]">{value} - {item?.fullName ?? ""} ({formatPercent(item?.pct ?? 0)})</span>;
                   }}
                 />
               </PieChart>
@@ -556,21 +556,21 @@ export default function StocksPage() {
         onClose={() => setDeleteTarget(null)}
         title={t.stocks.deleteHolding}
       >
-        <p className="text-sm text-[#4A5B60] mb-5">
+        <p className="text-sm text-[var(--c-text-2)] mb-5">
           {t.stocks.deleteConfirmText}{" "}
-          <span className="font-semibold text-[#0A1519]">{deleteTarget?.ticker}</span>?{" "}
+          <span className="font-semibold text-[var(--c-text)]">{deleteTarget?.ticker}</span>?{" "}
           {t.common.thisActionCannotBeUndone}
         </p>
         <div className="flex justify-end gap-2">
           <button
             onClick={() => setDeleteTarget(null)}
-            className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors"
+            className="px-4 py-2 text-sm border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors"
           >
             {t.common.cancel}
           </button>
           <button
             onClick={confirmDelete}
-            className="px-4 py-2 text-sm text-white bg-[#E5484D] rounded-lg hover:bg-[#CC3B40] transition-colors"
+            className="px-4 py-2 text-sm text-white bg-[var(--c-expense)] rounded-lg hover:bg-[var(--c-expense-hov)] transition-colors"
           >
             {t.common.delete}
           </button>
@@ -588,7 +588,7 @@ export default function StocksPage() {
       >
         <div className="space-y-4">
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.ticker}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.stocks.ticker}</label>
             <input
               type="text"
               value={addTicker}
@@ -598,7 +598,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.companyName}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.stocks.companyName}</label>
             <input
               type="text"
               value={addCompany}
@@ -608,7 +608,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.shares}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.stocks.shares}</label>
             <input
               type="number"
               value={addShares}
@@ -620,7 +620,7 @@ export default function StocksPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.stocks.costPerShare}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.stocks.costPerShare}</label>
             <input
               type="number"
               value={addCost}
@@ -632,7 +632,7 @@ export default function StocksPage() {
             />
           </div>
 
-          {addError && <p className="text-sm text-[#E5484D]">{addError}</p>}
+          {addError && <p className="text-sm text-[var(--c-expense)]">{addError}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
             <button
@@ -640,14 +640,14 @@ export default function StocksPage() {
                 setAddOpen(false);
                 resetAddForm();
               }}
-              className="px-4 py-2 text-sm border border-[#E6EAEB] rounded-lg text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors"
+              className="px-4 py-2 text-sm border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors"
             >
               {t.common.cancel}
             </button>
             <button
               onClick={handleAdd}
               disabled={addSaving}
-              className="px-4 py-2 text-sm text-white bg-[#025864] rounded-lg hover:bg-[#014750] transition-colors disabled:opacity-50"
+              className="px-4 py-2 text-sm text-white bg-[var(--c-brand)] rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors disabled:opacity-50"
             >
               {addSaving ? t.common.validating : t.common.add}
             </button>

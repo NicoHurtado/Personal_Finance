@@ -19,7 +19,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E6EAEB] text-[#4A5B60] disabled:opacity-30 hover:bg-[#F2F5F5] transition-colors"
+        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] disabled:opacity-30 hover:bg-[var(--c-surface)] transition-colors"
       >
         Prev
       </button>
@@ -29,8 +29,8 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
           onClick={() => onPageChange(p)}
           className={`w-8 h-8 text-xs font-medium rounded-lg transition-colors ${
             p === currentPage
-              ? "bg-[#025864] text-white"
-              : "text-[#4A5B60] hover:bg-[#F2F5F5]"
+              ? "bg-[var(--c-brand)] text-white"
+              : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"
           }`}
         >
           {p}
@@ -39,7 +39,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
       <button
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-[#E6EAEB] text-[#4A5B60] disabled:opacity-30 hover:bg-[#F2F5F5] transition-colors"
+        className="px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] disabled:opacity-30 hover:bg-[var(--c-surface)] transition-colors"
       >
         Next
       </button>

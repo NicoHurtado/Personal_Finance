@@ -28,7 +28,7 @@ export default function TableFilters({
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
       <div className="relative flex-1 max-w-xs">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#7A8B90] pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--c-text-3)] pointer-events-none"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -45,14 +45,14 @@ export default function TableFilters({
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={searchPlaceholder}
-          className="w-full pl-9 pr-3 py-2 text-sm text-[#0A1519] bg-white border border-[#E6EAEB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#025864] placeholder:text-[#7A8B90]"
+          className="w-full pl-9 pr-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] placeholder:text-[var(--c-text-3)]"
         />
       </div>
       {filterOptions && filterOptions.length > 0 && onFilterChange && (
         <select
           value={filterValue ?? ""}
           onChange={(e) => onFilterChange(e.target.value)}
-          className="px-3 py-2 text-sm text-[#0A1519] bg-white border border-[#E6EAEB] rounded-lg focus:outline-none focus:ring-1 focus:ring-[#025864]"
+          className="px-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
           aria-label={filterLabel}
         >
           <option value="">All {filterLabel}</option>

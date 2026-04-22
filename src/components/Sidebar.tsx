@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { useT } from "@/hooks/useT";
 import { useLangStore } from "@/store/langStore";
+import { useThemeStore } from "@/store/themeStore";
 
 type NavItem = {
   href: string;
@@ -33,6 +34,7 @@ export default function Sidebar() {
   const router = useRouter();
   const t = useT();
   const { lang, toggleLang } = useLangStore();
+  const { dark, toggleDark } = useThemeStore();
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   const [userName, setUserName] = useState("");
@@ -128,14 +130,32 @@ export default function Sidebar() {
         {/* Brand */}
         <div className="px-5 pt-7 pb-8 flex items-center justify-between">
           <span className="text-[15px] font-semibold tracking-tight text-sidebar-foreground">Finance</span>
-          {/* Language toggle */}
-          <button
-            onClick={toggleLang}
-            className="text-[11px] font-semibold px-2 py-0.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
-            title={lang === "es" ? "Switch to English" : "Cambiar a Español"}
-          >
-            {lang === "es" ? "EN" : "ES"}
-          </button>
+          <div className="flex items-center gap-1.5">
+            {/* Dark mode toggle */}
+            <button
+              onClick={toggleDark}
+              className="p-1.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+              title={dark ? "Modo claro" : "Modo oscuro"}
+            >
+              {dark ? (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 110 10A5 5 0 0112 7z" />
+                </svg>
+              ) : (
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+              )}
+            </button>
+            {/* Language toggle */}
+            <button
+              onClick={toggleLang}
+              className="text-[11px] font-semibold px-2 py-0.5 rounded-md border border-border text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+              title={lang === "es" ? "Switch to English" : "Cambiar a Español"}
+            >
+              {lang === "es" ? "EN" : "ES"}
+            </button>
+          </div>
         </div>
 
         {/* Nav */}
@@ -199,7 +219,7 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom">
         {mobileItems.map((item) => {
           const active = isActive(item.href);
           return (
@@ -215,10 +235,26 @@ export default function Sidebar() {
             </Link>
           );
         })}
+        {/* Dark mode toggle for mobile */}
+        <button
+          onClick={toggleDark}
+          className="flex flex-col items-center gap-1 px-2 py-1.5 text-[10px] font-medium transition-colors text-muted-foreground"
+        >
+          {dark ? (
+            <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 7a5 5 0 110 10A5 5 0 0112 7z" />
+            </svg>
+          ) : (
+            <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          )}
+          <span>{dark ? "☀︎" : "☾"}</span>
+        </button>
         {/* Language toggle for mobile */}
         <button
           onClick={toggleLang}
-          className={`flex flex-col items-center gap-1 px-2 py-1.5 text-[10px] font-medium transition-colors text-muted-foreground`}
+          className="flex flex-col items-center gap-1 px-2 py-1.5 text-[10px] font-medium transition-colors text-muted-foreground"
         >
           <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />

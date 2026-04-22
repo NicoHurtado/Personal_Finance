@@ -24,9 +24,9 @@ export default function Card({
   return (
     <div
       className={`
-        bg-white border border-[#E6EAEB] rounded-2xl ${paddingMap[padding]}
+        bg-card border border-[var(--c-border)] rounded-2xl ${paddingMap[padding]}
         transition-all duration-150
-        ${hover ? "hover:border-[#CFD7D9] hover:shadow-[0_4px_16px_rgba(10,21,25,0.06)]" : ""}
+        ${hover ? "hover:border-[var(--c-sep)] hover:shadow-[0_4px_16px_rgba(10,21,25,0.06)]" : ""}
         ${className}
       `}
     >

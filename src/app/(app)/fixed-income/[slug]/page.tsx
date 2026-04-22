@@ -306,20 +306,20 @@ export default function CajitaPage() {
     growth: anchorCalc.growth,
   };
 
-  const inputCls = "border border-[#E6EAEB] rounded-lg px-3 py-2 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
-  const inputSmCls = "border border-[#E6EAEB] rounded-lg px-2 py-1 text-sm text-[#0A1519] focus:outline-none focus:ring-1 focus:ring-[#025864] bg-white";
+  const inputCls = "border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
+  const inputSmCls = "border border-[var(--c-border)] rounded-lg px-2 py-1 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
 
   return (
     <div className="space-y-8">
       {/* Page Header with back link */}
       <div>
-        <Link href="/fixed-income" className="inline-flex items-center gap-1 text-[13px] text-[#7A8B90] hover:text-[#0A1519] transition-colors mb-3">
+        <Link href="/fixed-income" className="inline-flex items-center gap-1 text-[13px] text-[var(--c-text-3)] hover:text-[var(--c-text)] transition-colors mb-3">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
           {t.fixedIncome.title}
         </Link>
-        <h1 className="text-heading text-[#0A1519]">{account?.name || t.fixedIncome.title}</h1>
+        <h1 className="text-heading text-[var(--c-text)]">{account?.name || t.fixedIncome.title}</h1>
       </div>
 
       {/* Header Card Section */}
@@ -332,7 +332,7 @@ export default function CajitaPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Nu Branding Card */}
-          <div className="rounded-xl border border-[#E6EAEB] p-6 flex flex-col items-center justify-center gap-3 bg-[#025864] text-white">
+          <div className="rounded-xl border border-[var(--c-border)] p-6 flex flex-col items-center justify-center gap-3 bg-[var(--c-brand)] text-white">
             <div className="w-10 h-10 border border-white/20 rounded-lg flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -342,22 +342,22 @@ export default function CajitaPage() {
           </div>
 
           <Card>
-            <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.fixedIncome.balance}</p>
-            <p className="text-xl font-semibold text-[#0A1519] tabular-nums">
+            <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.fixedIncome.balance}</p>
+            <p className="text-xl font-semibold text-[var(--c-text)] tabular-nums">
               {formatCOP(headerBalance.balance)}
             </p>
           </Card>
 
           <Card>
-            <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">{t.fixedIncome.totalAccrued}</p>
-            <p className="text-xl font-semibold text-[#00A85A] tabular-nums">
+            <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.fixedIncome.totalAccrued}</p>
+            <p className="text-xl font-semibold text-[var(--c-income)] tabular-nums">
               {formatCOP(headerBalance.growth)}
             </p>
           </Card>
 
           {/* Annual Rate */}
           <Card>
-            <p className="text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider mb-2">Annual Rate (EA)</p>
+            <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">Annual Rate (EA)</p>
             <div className="flex items-center gap-1">
               <input
                 type="number"
@@ -365,9 +365,9 @@ export default function CajitaPage() {
                 min="0"
                 value={annualRate}
                 onChange={(e) => handleRateChange(e.target.value)}
-                className={`w-20 text-xl font-semibold text-[#0A1519] ${inputSmCls} !py-1`}
+                className={`w-20 text-xl font-semibold text-[var(--c-text)] ${inputSmCls} !py-1`}
               />
-              <span className="text-xl font-semibold text-[#0A1519]">%</span>
+              <span className="text-xl font-semibold text-[var(--c-text)]">%</span>
             </div>
           </Card>
         </div>
@@ -379,12 +379,12 @@ export default function CajitaPage() {
       ) : (
         <Card>
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-[15px] font-medium text-[#0A1519]">
+            <h2 className="text-[15px] font-medium text-[var(--c-text)]">
               {t.fixedIncome.deposit}
             </h2>
             <button
               onClick={() => setAddModalOpen(true)}
-              className="px-4 py-2 bg-[#025864] text-white text-sm font-medium rounded-lg hover:bg-[#014750] transition-colors"
+              className="px-4 py-2 bg-[var(--c-brand)] text-white text-sm font-medium rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors"
             >
               {t.fixedIncome.addMovement}
             </button>
@@ -399,19 +399,19 @@ export default function CajitaPage() {
           <div className="overflow-x-auto -mx-5 md:-mx-6">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E6EAEB] text-left">
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.common.date}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.common.amount}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.fixedIncome.daysElapsed}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.fixedIncome.accruedInterest}</th>
-                  <th className="px-3 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider">{t.fixedIncome.currentValue}</th>
-                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[#7A8B90] uppercase tracking-wider text-right">{t.common.actions}</th>
+                <tr className="border-b border-[var(--c-border)] text-left">
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.common.date}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.common.amount}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.fixedIncome.daysElapsed}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.fixedIncome.accruedInterest}</th>
+                  <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{t.fixedIncome.currentValue}</th>
+                  <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{t.common.actions}</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedDeposits.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-10 text-center text-[#7A8B90] text-sm">
+                    <td colSpan={6} className="py-10 text-center text-[var(--c-text-3)] text-sm">
                       {search ? t.fixedIncome.noDeposits : t.fixedIncome.noDeposits}
                     </td>
                   </tr>
@@ -419,7 +419,7 @@ export default function CajitaPage() {
                   paginatedDeposits.map((d) => (
                     <tr
                       key={d._id}
-                      className="border-t border-[#EEF1F1] hover:bg-[#F4F9FA] transition-colors"
+                      className="border-t border-[var(--c-border-2)] hover:bg-[var(--c-surface-2)] transition-colors"
                     >
                       {editingId === d._id ? (
                         <>
@@ -440,10 +440,10 @@ export default function CajitaPage() {
                               className={`${inputSmCls} w-28`}
                             />
                           </td>
-                          <td className="px-3 py-3 text-[#7A8B90] text-[13px] tabular-nums">
+                          <td className="px-3 py-3 text-[var(--c-text-3)] text-[13px] tabular-nums">
                             {d.daysElapsed}
                           </td>
-                          <td className="px-3 py-3 text-[#00A85A] text-[13px] tabular-nums">
+                          <td className="px-3 py-3 text-[var(--c-income)] text-[13px] tabular-nums">
                             {formatCOP(d.accruedInterest)}
                           </td>
                           <td className="px-3 py-3 font-medium text-[13px] tabular-nums">
@@ -454,13 +454,13 @@ export default function CajitaPage() {
                               <button
                                 onClick={() => saveEdit(d._id)}
                                 disabled={editSubmitting}
-                                className="text-[13px] font-medium text-[#0A1519] hover:underline disabled:opacity-50"
+                                className="text-[13px] font-medium text-[var(--c-text)] hover:underline disabled:opacity-50"
                               >
                                 {editSubmitting ? "..." : t.common.save}
                               </button>
                               <button
                                 onClick={() => setEditingId(null)}
-                                className="text-[13px] text-[#7A8B90] hover:underline"
+                                className="text-[13px] text-[var(--c-text-3)] hover:underline"
                               >
                                 {t.common.cancel}
                               </button>
@@ -469,31 +469,31 @@ export default function CajitaPage() {
                         </>
                       ) : (
                         <>
-                          <td className="px-5 md:px-6 py-3.5 text-[13px] text-[#4A5B60] tabular-nums">{formatDate(d.date)}</td>
+                          <td className="px-5 md:px-6 py-3.5 text-[13px] text-[var(--c-text-2)] tabular-nums">{formatDate(d.date)}</td>
                           <td className="px-3 py-3.5 text-[13px] tabular-nums">
                             <div className="flex items-center gap-2">
-                              <span className={d.isWithdrawal ? "text-[#E5484D]" : "text-[#0A1519]"}>
+                              <span className={d.isWithdrawal ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}>
                                 {d.isWithdrawal ? "−" : "+"}{formatCOP(d.amountDeposited)}
                               </span>
-                              <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${d.isWithdrawal ? "bg-[#FDEDEE] text-[#E5484D]" : "bg-[#E6FBF2] text-[#00A85A]"}`}>
+                              <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] font-medium ${d.isWithdrawal ? "bg-[var(--c-expense-bg)] text-[var(--c-expense)]" : "bg-[var(--c-income-bg)] text-[var(--c-income)]"}`}>
                                 {d.isWithdrawal ? t.fixedIncome.withdrawal : t.fixedIncome.deposit}
                               </span>
                             </div>
                           </td>
-                          <td className="px-3 py-3.5 text-[13px] text-[#7A8B90] tabular-nums">
+                          <td className="px-3 py-3.5 text-[13px] text-[var(--c-text-3)] tabular-nums">
                             {d.isWithdrawal ? "—" : d.daysElapsed}
                           </td>
-                          <td className="px-3 py-3.5 text-[13px] text-[#00A85A] tabular-nums">
+                          <td className="px-3 py-3.5 text-[13px] text-[var(--c-income)] tabular-nums">
                             {d.isWithdrawal ? "—" : formatCOP(d.accruedInterest)}
                           </td>
                           <td className="px-3 py-3.5 text-[13px] font-medium tabular-nums">
-                            {d.isWithdrawal ? <span className="text-[#E5484D]">−{formatCOP(d.amountDeposited)}</span> : formatCOP(d.currentValue)}
+                            {d.isWithdrawal ? <span className="text-[var(--c-expense)]">−{formatCOP(d.amountDeposited)}</span> : formatCOP(d.currentValue)}
                           </td>
                           <td className="px-5 md:px-6 py-3.5 text-right">
                             <div className="flex items-center gap-2 justify-end">
                               <button
                                 onClick={() => startEdit(d)}
-                                className="text-[13px] text-[#4A5B60] hover:text-[#0A1519] hover:underline"
+                                className="text-[13px] text-[var(--c-text-2)] hover:text-[var(--c-text)] hover:underline"
                               >
                                 {t.common.edit}
                               </button>
@@ -502,7 +502,7 @@ export default function CajitaPage() {
                                   setDeleteTarget(d);
                                   setDeleteModalOpen(true);
                                 }}
-                                className="text-[13px] text-[#E5484D] hover:underline"
+                                className="text-[13px] text-[var(--c-expense)] hover:underline"
                               >
                                 {t.common.delete}
                               </button>
@@ -538,22 +538,22 @@ export default function CajitaPage() {
       >
         <div className="space-y-4">
           {/* Type toggle */}
-          <div className="flex rounded-lg border border-[#E6EAEB] overflow-hidden">
+          <div className="flex rounded-lg border border-[var(--c-border)] overflow-hidden">
             <button
               onClick={() => setAddType("Deposit")}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${addType === "Deposit" ? "bg-[#025864] text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${addType === "Deposit" ? "bg-[var(--c-brand)] text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}
             >
               {t.fixedIncome.deposit}
             </button>
             <button
               onClick={() => setAddType("Withdrawal")}
-              className={`flex-1 py-2 text-sm font-medium transition-colors ${addType === "Withdrawal" ? "bg-[#E5484D] text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}
+              className={`flex-1 py-2 text-sm font-medium transition-colors ${addType === "Withdrawal" ? "bg-[var(--c-expense)] text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}
             >
               {t.fixedIncome.withdrawal}
             </button>
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.common.date}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.common.date}</label>
             <input
               type="date"
               value={addDate}
@@ -562,7 +562,7 @@ export default function CajitaPage() {
             />
           </div>
           <div>
-            <label className="block text-[12px] font-medium text-[#4A5B60] mb-1.5">{t.common.amount}</label>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.common.amount}</label>
             <input
               type="number"
               min="1"
@@ -572,20 +572,20 @@ export default function CajitaPage() {
               className={`w-full ${inputCls}`}
             />
           </div>
-          {addError && <p className="text-[#E5484D] text-sm">{addError}</p>}
+          {addError && <p className="text-[var(--c-expense)] text-sm">{addError}</p>}
           <label className="flex items-center gap-2 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={addIsNotExpense}
               onChange={(e) => setAddIsNotExpense(e.target.checked)}
-              className="w-3.5 h-3.5 rounded accent-[#025864]"
+              className="w-3.5 h-3.5 rounded accent-[var(--c-brand)]"
             />
-            <span className="text-[11px] text-[#7A8B90]">{t.savings.doNotCountAsExpense}</span>
+            <span className="text-[11px] text-[var(--c-text-3)]">{t.savings.doNotCountAsExpense}</span>
           </label>
           <button
             onClick={handleAdd}
             disabled={addSubmitting}
-            className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm ${addType === "Withdrawal" ? "bg-[#E5484D] hover:bg-[#CC3B40]" : "bg-[#025864] hover:bg-[#014750]"}`}
+            className={`w-full py-2.5 text-white font-medium rounded-lg transition-colors disabled:opacity-50 text-sm ${addType === "Withdrawal" ? "bg-[var(--c-expense)] hover:bg-[var(--c-expense-hov)]" : "bg-[var(--c-brand)] hover:bg-[var(--c-brand-hov)]"}`}
           >
             {addSubmitting ? t.common.saving : addType === "Withdrawal" ? t.fixedIncome.addWithdrawal : t.fixedIncome.addDeposit}
           </button>
@@ -602,13 +602,13 @@ export default function CajitaPage() {
         title={t.fixedIncome.confirmDelete}
       >
         <div className="space-y-5">
-          <p className="text-sm text-[#4A5B60]">
+          <p className="text-sm text-[var(--c-text-2)]">
             {t.fixedIncome.deleteConfirmText}{" "}
-            <span className="font-semibold text-[#0A1519]">
+            <span className="font-semibold text-[var(--c-text)]">
               {deleteTarget ? formatCOP(deleteTarget.amountDeposited) : ""}
             </span>{" "}
             {t.fixedIncome.deleteConfirmFrom}{" "}
-            <span className="font-semibold text-[#0A1519]">
+            <span className="font-semibold text-[var(--c-text)]">
               {deleteTarget ? formatDate(deleteTarget.date) : ""}
             </span>
             ?
@@ -619,13 +619,13 @@ export default function CajitaPage() {
                 setDeleteModalOpen(false);
                 setDeleteTarget(null);
               }}
-              className="px-4 py-2 border border-[#E6EAEB] rounded-lg text-sm font-medium text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors"
+              className="px-4 py-2 border border-[var(--c-border)] rounded-lg text-sm font-medium text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors"
             >
               {t.common.cancel}
             </button>
             <button
               onClick={handleDelete}
-              className="px-4 py-2 bg-[#E5484D] text-white rounded-lg text-sm font-medium hover:bg-[#CC3B40] transition-colors"
+              className="px-4 py-2 bg-[var(--c-expense)] text-white rounded-lg text-sm font-medium hover:bg-[var(--c-expense-hov)] transition-colors"
             >
               {t.common.delete}
             </button>

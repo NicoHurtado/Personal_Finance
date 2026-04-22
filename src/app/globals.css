@@ -4,11 +4,106 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Legacy palette aliases — maps old custom vars to new shadcn green theme */
+/* ── App semantic color tokens ────────────────────────────────────────────── */
+/* Light mode */
 :root {
-  --legacy-primary: oklch(0.448 0.119 151.328);      /* dark green (old teal) */
+  /* Text */
+  --c-text:          #0A1519;   /* primary foreground */
+  --c-text-2:        #4A5B60;   /* secondary text */
+  --c-text-3:        #7A8B90;   /* muted / labels */
+  --c-text-4:        #9AABAD;   /* placeholder / disabled */
+  --c-text-5:        #B0BCBF;   /* chart ticks */
+  --c-sep:           #CFD7D9;   /* bullet separators */
+
+  /* Borders & surfaces */
+  --c-border:        #E6EAEB;   /* default border */
+  --c-border-2:      #EEF1F1;   /* subtle row divider */
+  --c-surface:       #F2F5F5;   /* secondary button hover */
+  --c-surface-2:     #F4F9FA;   /* table row hover */
+  --c-surface-3:     #F8FAFA;   /* spreadsheet headers */
+  --c-surface-4:     #EBF4F5;   /* teal-tinted icon bg */
+  --c-surface-5:     #E6F0F2;   /* teal surface alt */
+
+  /* Brand */
+  --c-brand:         #025864;
+  --c-brand-hov:     #014750;
+
+  /* Income / positive */
+  --c-income:        #00A85A;
+  --c-income-bg:     #E6FBF2;
+
+  /* Expense / negative */
+  --c-expense:       #E5484D;
+  --c-expense-bg:    #FDEDEE;
+  --c-expense-bg2:   #FEE9E9;
+  --c-expense-hov:   #CC3B40;
+  --c-expense-text:  #FF9FA3;   /* debt hero display */
+
+  /* Error states (login) */
+  --c-error-text:    #C4232B;
+  --c-error-border:  #FFDAD6;
+  --c-error-bg:      #FFF1F0;
+
+  /* Charts */
+  --c-chart-grid:    #F0F3F4;
+  --c-uncat:         #D4D4D4;   /* uncategorized slice */
+  --c-tooltip-bg:    #ffffff;
+  --c-grad1:         #4FB7C2;   /* dashboard radial gradient */
+  --c-grad2:         #00D47E;   /* dashboard radial gradient 2 */
+}
+
+/* Dark mode */
+.dark {
+  /* Text */
+  --c-text:          #E8F0F2;
+  --c-text-2:        #A8BCBF;
+  --c-text-3:        #6E8589;
+  --c-text-4:        #556468;
+  --c-text-5:        #556468;
+  --c-sep:           #2E3D40;
+
+  /* Borders & surfaces */
+  --c-border:        #1E2E31;
+  --c-border-2:      #182628;
+  --c-surface:       #1A2B2E;
+  --c-surface-2:     #162527;
+  --c-surface-3:     #141E20;
+  --c-surface-4:     #0F2226;
+  --c-surface-5:     #0D1F23;
+
+  /* Brand — slightly brighter in dark */
+  --c-brand:         #0A8090;
+  --c-brand-hov:     #0C96A8;
+
+  /* Income / positive */
+  --c-income:        #00C96D;
+  --c-income-bg:     #062B18;
+
+  /* Expense / negative */
+  --c-expense:       #FF6166;
+  --c-expense-bg:    #2D0F10;
+  --c-expense-bg2:   #2D0F10;
+  --c-expense-hov:   #FF4A50;
+  --c-expense-text:  #FF8F93;
+
+  /* Error states */
+  --c-error-text:    #FF6B6B;
+  --c-error-border:  #4A1515;
+  --c-error-bg:      #2D0A0A;
+
+  /* Charts */
+  --c-chart-grid:    #1E2E31;
+  --c-uncat:         #3A4A4D;
+  --c-tooltip-bg:    #1A2B2E;
+  --c-grad1:         #1A4A50;
+  --c-grad2:         #063D20;
+}
+
+/* Legacy palette aliases — kept for any remaining usages */
+:root {
+  --legacy-primary: oklch(0.448 0.119 151.328);
   --legacy-primary-hover: oklch(0.38 0.1 151);
-  --legacy-accent: oklch(0.723 0.219 149.579);        /* bright green */
+  --legacy-accent: oklch(0.723 0.219 149.579);
   --legacy-accent-hover: oklch(0.627 0.194 149.214);
   --legacy-danger: oklch(0.577 0.245 27.325);
   --legacy-danger-hover: oklch(0.5 0.22 27);
@@ -16,6 +111,36 @@
   --legacy-text-tertiary: oklch(0.6 0.015 220);
   --legacy-border: oklch(0.922 0 0);
   --legacy-muted: oklch(0.97 0 0);
+}
+
+/* ── Dark mode — direct rules (bypass Tailwind variable chain issues) ──────── */
+html.dark,
+html.dark body {
+  background-color: oklch(0.145 0 0);
+  color: oklch(0.985 0 0);
+  color-scheme: dark;
+}
+
+/* Card / panel backgrounds in dark mode */
+html.dark .bg-card,
+html.dark [class*="rounded"][class*="border"],
+html.dark [class*="bg-card"] {
+  background-color: oklch(0.205 0 0);
+}
+
+/* Sidebar dark */
+html.dark aside {
+  background-color: oklch(0.205 0 0);
+}
+
+/* Mobile nav bar dark */
+html.dark nav.fixed {
+  background-color: oklch(0.205 0 0);
+}
+
+/* Dark scrollbar */
+html.dark ::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0 0);
 }
 
 /* Tabular numbers for financial data */

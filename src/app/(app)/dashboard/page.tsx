@@ -401,26 +401,26 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-end justify-between gap-2">
         <div>
-          <p className="text-[13px] text-[#7A8B90]">{dateStr}</p>
-          <h1 className="text-heading text-[#0A1519] mt-1">{greeting}</h1>
+          <p className="text-[13px] text-[var(--c-text-3)]">{dateStr}</p>
+          <h1 className="text-heading text-[var(--c-text)] mt-1">{greeting}</h1>
         </div>
         <div className="hidden md:flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E6EAEB] rounded-lg text-[12px] text-[#4A5B60]">
+          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
             Last 30 days
           </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-white border border-[#E6EAEB] rounded-lg text-[12px] text-[#4A5B60]">
-            TRM <span className="font-medium text-[#0A1519] tabular-nums">{formatCOP(trm)}</span>
+          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
+            TRM <span className="font-medium text-[var(--c-text)] tabular-nums">{formatCOP(trm)}</span>
           </div>
         </div>
       </div>
 
       {/* Hero: Total Balance */}
-      <section className="rounded-2xl bg-[#025864] text-white p-7 md:p-9 relative overflow-hidden">
-        <div aria-hidden className="absolute -top-24 -right-20 w-[340px] h-[340px] rounded-full opacity-[0.18]" style={{ background: "radial-gradient(closest-side, #00D47E, transparent)" }} />
-        <div aria-hidden className="absolute -bottom-32 -left-10 w-[280px] h-[280px] rounded-full opacity-[0.10]" style={{ background: "radial-gradient(closest-side, #4FB7C2, transparent)" }} />
+      <section className="rounded-2xl bg-[var(--c-brand)] text-white p-7 md:p-9 relative overflow-hidden">
+        <div aria-hidden className="absolute -top-24 -right-20 w-[340px] h-[340px] rounded-full opacity-[0.18]" style={{ background: "radial-gradient(closest-side, var(--c-grad2), transparent)" }} />
+        <div aria-hidden className="absolute -bottom-32 -left-10 w-[280px] h-[280px] rounded-full opacity-[0.10]" style={{ background: "radial-gradient(closest-side, var(--c-grad1), transparent)" }} />
 
         <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
           <div>
@@ -451,7 +451,7 @@ export default function DashboardPage() {
               {debtAbs > 0 && (
                 <div>
                   <p className="text-[11px] text-white/60">{t.dashboard.totalDebt}</p>
-                  <p className="text-[15px] font-medium tabular-nums text-[#FF9FA3]">{formatCOP(debtAbs)}</p>
+                  <p className="text-[15px] font-medium tabular-nums text-[var(--c-expense-text)]">{formatCOP(debtAbs)}</p>
                 </div>
               )}
             </div>
@@ -506,7 +506,7 @@ export default function DashboardPage() {
           label={t.dashboard.totalDebt}
           value={formatCOP(debtAbs)}
           period={t.dashboard.creditCards}
-          valueClassName="text-[#E5484D]"
+          valueClassName="text-[var(--c-expense)]"
         />
       </section>
 
@@ -514,34 +514,34 @@ export default function DashboardPage() {
       <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <Card className="lg:col-span-3" padding="lg">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <h2 className="text-[13px] font-semibold text-[#0A1519] tracking-tight">{t.dashboard.cashFlow}</h2>
+            <h2 className="text-[13px] font-semibold text-[var(--c-text)] tracking-tight">{t.dashboard.cashFlow}</h2>
             <div className="flex items-center gap-2 flex-wrap">
               {chartView === "month" ? (
                 <div className="flex items-center gap-1">
-                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx < availableMonths.length - 1) setSelectedMonth(availableMonths[idx + 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[#9AABAD] hover:text-[#0A1519] hover:bg-[#F4F9FA] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) >= availableMonths.length - 1} aria-label="Previous month">
+                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx < availableMonths.length - 1) setSelectedMonth(availableMonths[idx + 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) >= availableMonths.length - 1} aria-label="Previous month">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                   </button>
-                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="text-[12px] font-medium text-[#0A1519] bg-transparent border-none outline-none cursor-pointer hover:text-[#025864] transition-colors">
+                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
                     {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m)}</option>))}
                   </select>
-                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) setSelectedMonth(availableMonths[idx - 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[#9AABAD] hover:text-[#0A1519] hover:bg-[#F4F9FA] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) <= 0} aria-label="Next month">
+                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) setSelectedMonth(availableMonths[idx - 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) <= 0} aria-label="Next month">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
                   </button>
                 </div>
               ) : (
-                <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="text-[12px] font-medium text-[#0A1519] bg-transparent border-none outline-none cursor-pointer hover:text-[#025864] transition-colors">
+                <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
                   {availableYears.map((y) => (<option key={y} value={y}>{y}</option>))}
                 </select>
               )}
-              <div className="w-px h-3.5 bg-[#E6EAEB]" />
-              <div className="flex items-center bg-[#F4F9FA] rounded-lg p-0.5 gap-0.5">
-                <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>{t.common.monthly}</button>
-                <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-white text-[#0A1519] shadow-sm font-medium" : "text-[#9AABAD] hover:text-[#4A5B60]"}`}>{t.common.yearly}</button>
+              <div className="w-px h-3.5 bg-[var(--c-border)]" />
+              <div className="flex items-center bg-[var(--c-surface-2)] rounded-lg p-0.5 gap-0.5">
+                <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.monthly}</button>
+                <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.yearly}</button>
               </div>
-              <div className="w-px h-3.5 bg-[#E6EAEB]" />
+              <div className="w-px h-3.5 bg-[var(--c-border)]" />
               <div className="flex items-center gap-3">
-                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[#025864]" /> {t.dashboard.capital}</span>
-                <span className="inline-flex text-[11px] text-[#9AABAD] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[#00D47E] opacity-80" /> {t.dashboard.expenses}</span>
+                <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[var(--c-brand)]" /> {t.dashboard.capital}</span>
+                <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[var(--c-grad2)] opacity-80" /> {t.dashboard.expenses}</span>
               </div>
             </div>
           </div>
@@ -554,22 +554,22 @@ export default function DashboardPage() {
               <ComposedChart data={cashFlow.data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap={chartView === "month" ? "30%" : "40%"}>
                 <defs>
                   <linearGradient id="capitalFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#025864" stopOpacity={0.12} />
-                    <stop offset="100%" stopColor="#025864" stopOpacity={0} />
+                    <stop offset="0%" stopColor="var(--c-brand)" stopOpacity={0.12} />
+                    <stop offset="100%" stopColor="var(--c-brand)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="expenseBarFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#00D47E" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#00D47E" stopOpacity={0.5} />
+                    <stop offset="0%" stopColor="var(--c-grad2)" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="var(--c-grad2)" stopOpacity={0.5} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid vertical={false} stroke="#F0F3F4" strokeDasharray="0" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#B0BCBF", fontWeight: 400 }} tickLine={false} axisLine={false} interval={chartView === "month" ? "preserveStartEnd" : 0} dy={6} />
-                <YAxis yAxisId="capital" tick={{ fontSize: 10, fill: "#B0BCBF" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
-                <YAxis yAxisId="expense" orientation="right" domain={[0, expenseDomainMax]} tick={{ fontSize: 10, fill: "#B0BCBF" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
+                <CartesianGrid vertical={false} stroke="var(--c-chart-grid)" strokeDasharray="0" />
+                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--c-text-5)", fontWeight: 400 }} tickLine={false} axisLine={false} interval={chartView === "month" ? "preserveStartEnd" : 0} dy={6} />
+                <YAxis yAxisId="capital" tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
+                <YAxis yAxisId="expense" orientation="right" domain={[0, expenseDomainMax]} tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
                 <Tooltip cursor={{ fill: "rgba(2,88,100,0.03)" }} content={<CashFlowTooltip chartView={chartView} />} />
                 <Bar yAxisId="expense" dataKey="expenseBar" fill="url(#expenseBarFill)" radius={[4, 4, 0, 0]} name="expense" maxBarSize={28} />
-                <Area yAxisId="capital" type="monotoneX" dataKey="capital" stroke="#025864" strokeWidth={1.5} fill="url(#capitalFill)" name="capital" />
-                <Line yAxisId="capital" type="monotoneX" dataKey="capital" stroke="#025864" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "#025864", stroke: "#fff", strokeWidth: 2 }} legendType="none" />
+                <Area yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} fill="url(#capitalFill)" name="capital" />
+                <Line yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--c-brand)", stroke: "var(--c-tooltip-bg)", strokeWidth: 2 }} legendType="none" />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -579,23 +579,23 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-1 flex flex-col gap-4">
           <Card padding="md" className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[#EBF4F5] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[#025864]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
+            <div className="w-9 h-9 rounded-xl bg-[var(--c-surface-4)] flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-[var(--c-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[#9AABAD] mb-0.5">{t.dashboard.capital}</p>
-              <p className="text-[17px] font-semibold text-[#0A1519] tabular-nums truncate leading-tight">{formatCOP(netCapital)}</p>
-              <p className="text-[10px] text-[#B0BCBF] mt-0.5">{t.dashboard.currentBalance}</p>
+              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.capital}</p>
+              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(netCapital)}</p>
+              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{t.dashboard.currentBalance}</p>
             </div>
           </Card>
           <Card padding="md" className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[#E6FBF2] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[#00A85A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" /></svg>
+            <div className="w-9 h-9 rounded-xl bg-[var(--c-income-bg)] flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-[var(--c-income)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" /></svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[#9AABAD] mb-0.5">{t.dashboard.expenses}</p>
-              <p className="text-[17px] font-semibold text-[#0A1519] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
-              <p className="text-[10px] text-[#B0BCBF] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `Year ${selectedYear}`}</p>
+              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.expenses}</p>
+              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
+              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `Year ${selectedYear}`}</p>
             </div>
           </Card>
         </div>
@@ -606,35 +606,35 @@ export default function DashboardPage() {
         <Card className="lg:col-span-2" padding="md">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#4A5B60]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM7.5 6.75h12M7.5 12h12M7.5 17.25h12" /></svg>
-              <h2 className="text-title text-[#0A1519]">{t.dashboard.recentActivity}</h2>
+              <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 17.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM7.5 6.75h12M7.5 12h12M7.5 17.25h12" /></svg>
+              <h2 className="text-title text-[var(--c-text)]">{t.dashboard.recentActivity}</h2>
             </div>
-            <span className="text-[11px] text-[#7A8B90]">{recentActivity.length}</span>
+            <span className="text-[11px] text-[var(--c-text-3)]">{recentActivity.length}</span>
           </div>
           {recentActivity.length === 0 ? (
-            <p className="text-sm text-[#7A8B90] py-10 text-center">{t.dashboard.noRecentActivity}</p>
+            <p className="text-sm text-[var(--c-text-3)] py-10 text-center">{t.dashboard.noRecentActivity}</p>
           ) : (
-            <div className="divide-y divide-[#EEF1F1] max-h-[480px] overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+            <div className="divide-y divide-[var(--c-border-2)] max-h-[480px] overflow-y-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
               {recentActivity.map((row, i) => (
                 <div key={i} className="flex items-center gap-4 py-3.5">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${row.amount < 0 ? "bg-[#FEE9E9] text-[#E5484D]" : "bg-[#E6F0F2] text-[#025864]"}`}>
+                  <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${row.amount < 0 ? "bg-[var(--c-expense-bg2)] text-[var(--c-expense)]" : "bg-[var(--c-surface-5)] text-[var(--c-brand)]"}`}>
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       {row.amount < 0 ? (<path strokeLinecap="round" strokeLinejoin="round" d="M17 13l-5 5m0 0l-5-5m5 5V6" />) : (<path strokeLinecap="round" strokeLinejoin="round" d="M7 11l5-5m0 0l5 5m-5-5v12" />)}
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-medium text-[#0A1519] truncate">{row.description}</p>
+                    <p className="text-[13px] font-medium text-[var(--c-text)] truncate">{row.description}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-[11px] text-[#7A8B90]">{formatDate(row.date)}</span>
-                      <span className="w-1 h-1 rounded-full bg-[#CFD7D9]" />
-                      <span className="text-[11px] text-[#7A8B90]">{row.product}</span>
+                      <span className="text-[11px] text-[var(--c-text-3)]">{formatDate(row.date)}</span>
+                      <span className="w-1 h-1 rounded-full bg-[var(--c-sep)]" />
+                      <span className="text-[11px] text-[var(--c-text-3)]">{row.product}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-[13px] font-semibold tabular-nums ${row.amount < 0 ? "text-[#E5484D]" : "text-[#0A1519]"}`}>
+                    <p className={`text-[13px] font-semibold tabular-nums ${row.amount < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>
                       {row.amount > 0 ? "+" : ""}{row.isUsd ? formatUSD(row.amount) : formatCOP(row.amount)}
                     </p>
-                    <p className="text-[10px] text-[#7A8B90] mt-0.5">{row.type}</p>
+                    <p className="text-[10px] text-[var(--c-text-3)] mt-0.5">{row.type}</p>
                   </div>
                 </div>
               ))}
@@ -645,8 +645,8 @@ export default function DashboardPage() {
         <Card padding="md">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <svg className="w-4 h-4 text-[#4A5B60]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-              <h2 className="text-title text-[#0A1519]">My Cards</h2>
+              <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
+              <h2 className="text-title text-[var(--c-text)]">My Cards</h2>
             </div>
           </div>
 
@@ -663,16 +663,16 @@ export default function DashboardPage() {
             </div>
           )}
 
-          <div className="space-y-2 text-[12px] pt-2 border-t border-[#EEF1F1]">
+          <div className="space-y-2 text-[12px] pt-2 border-t border-[var(--c-border-2)]">
             {walletCards.map((card) => {
               const isUsd = card.currency === "USD";
               const fmt = isUsd ? formatUSD : formatCOP;
               return (
                 <div key={card._id} className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2 text-[#4A5B60]">
+                  <span className="inline-flex items-center gap-2 text-[var(--c-text-2)]">
                     <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.color }} /> {card.name}
                   </span>
-                  <span className={`tabular-nums font-medium ${card.balance < 0 ? "text-[#E5484D]" : "text-[#0A1519]"}`}>{fmt(card.balance)}</span>
+                  <span className={`tabular-nums font-medium ${card.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>{fmt(card.balance)}</span>
                 </div>
               );
             })}
@@ -695,38 +695,38 @@ function CashFlowTooltip({ active, payload, label, chartView }: any) {
 
   if (chartView === "month") {
     return (
-      <div className="bg-white/95 backdrop-blur-sm border border-[#E6EAEB] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5 max-w-[240px]">
-        <p className="text-[11px] font-medium text-[#9AABAD] mb-2.5 uppercase tracking-wider">Day {label}</p>
-        <div className="flex items-center justify-between gap-4 mb-2.5 pb-2.5 border-b border-[#F0F3F4]">
-          <span className="text-[11px] text-[#4A5B60]">Capital</span>
-          <span className="text-[12px] font-semibold text-[#025864] tabular-nums">{formatCOP(row.capital)}</span>
+      <div className="bg-card/95 backdrop-blur-sm border border-[var(--c-border)] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5 max-w-[240px]">
+        <p className="text-[11px] font-medium text-[var(--c-text-4)] mb-2.5 uppercase tracking-wider">Day {label}</p>
+        <div className="flex items-center justify-between gap-4 mb-2.5 pb-2.5 border-b border-[var(--c-chart-grid)]">
+          <span className="text-[11px] text-[var(--c-text-2)]">Capital</span>
+          <span className="text-[12px] font-semibold text-[var(--c-brand)] tabular-nums">{formatCOP(row.capital)}</span>
         </div>
         {expenses.length > 0 ? (
           <div className="space-y-1">
             {expenses.map((t, i) => (
               <div key={i} className="flex items-center justify-between gap-3">
-                <span className="text-[11px] text-[#7A8B90] truncate">{t.description}</span>
-                <span className="text-[11px] font-medium text-[#E5484D] tabular-nums whitespace-nowrap">{formatCOP(t.amount)}</span>
+                <span className="text-[11px] text-[var(--c-text-3)] truncate">{t.description}</span>
+                <span className="text-[11px] font-medium text-[var(--c-expense)] tabular-nums whitespace-nowrap">{formatCOP(t.amount)}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[11px] text-[#B0BCBF]">No expenses</p>
+          <p className="text-[11px] text-[var(--c-text-5)]">No expenses</p>
         )}
       </div>
     );
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-[#E6EAEB] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5">
-      <p className="text-[11px] font-medium text-[#9AABAD] mb-2.5 uppercase tracking-wider">{label}</p>
+    <div className="bg-card/95 backdrop-blur-sm border border-[var(--c-border)] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5">
+      <p className="text-[11px] font-medium text-[var(--c-text-4)] mb-2.5 uppercase tracking-wider">{label}</p>
       <div className="flex items-center justify-between gap-6 mb-1.5">
-        <span className="text-[11px] text-[#4A5B60]">Capital</span>
-        <span className="text-[12px] font-semibold text-[#025864] tabular-nums">{formatCOP(row.capital)}</span>
+        <span className="text-[11px] text-[var(--c-text-2)]">Capital</span>
+        <span className="text-[12px] font-semibold text-[var(--c-brand)] tabular-nums">{formatCOP(row.capital)}</span>
       </div>
       <div className="flex items-center justify-between gap-6">
-        <span className="text-[11px] text-[#4A5B60]">Expenses</span>
-        <span className="text-[12px] font-semibold text-[#E5484D] tabular-nums">{formatCOP(row.expenseBar)}</span>
+        <span className="text-[11px] text-[var(--c-text-2)]">Expenses</span>
+        <span className="text-[12px] font-semibold text-[var(--c-expense)] tabular-nums">{formatCOP(row.expenseBar)}</span>
       </div>
     </div>
   );
@@ -734,28 +734,28 @@ function CashFlowTooltip({ active, payload, label, chartView }: any) {
 
 /* ---------- StatCard ---------- */
 
-function StatCard({ icon, label, value, secondary, growthAmount, period, valueClassName = "text-[#0A1519]" }: {
+function StatCard({ icon, label, value, secondary, growthAmount, period, valueClassName = "text-[var(--c-text)]" }: {
   icon: React.ReactNode; label: string; value: string; secondary?: string; growthAmount?: number; period: string; valueClassName?: string;
 }) {
   const hasGrowth = growthAmount !== undefined && isFinite(growthAmount) && growthAmount !== 0;
   return (
     <Card padding="md" hover>
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-[#4A5B60]">
-          <div className="w-7 h-7 rounded-lg bg-[#F4F9FA] flex items-center justify-center">{icon}</div>
-          <span className="text-[12px] font-medium text-[#4A5B60]">{label}</span>
+        <div className="flex items-center gap-2 text-[var(--c-text-2)]">
+          <div className="w-7 h-7 rounded-lg bg-[var(--c-surface-2)] flex items-center justify-center">{icon}</div>
+          <span className="text-[12px] font-medium text-[var(--c-text-2)]">{label}</span>
         </div>
-        <span className="text-[10px] text-[#7A8B90]">{period}</span>
+        <span className="text-[10px] text-[var(--c-text-3)]">{period}</span>
       </div>
       <div className="flex items-baseline gap-2">
         <p className={`text-[22px] font-semibold tabular-nums ${valueClassName}`}>{value}</p>
         {hasGrowth && (
-          <span className={`text-[11px] font-medium tabular-nums ${growthAmount! > 0 ? "text-[#00A85A]" : "text-[#E5484D]"}`}>
+          <span className={`text-[11px] font-medium tabular-nums ${growthAmount! > 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
             {growthAmount! > 0 ? "+" : ""}{formatCOP(growthAmount!)}
           </span>
         )}
       </div>
-      {secondary && <p className="text-[11px] text-[#7A8B90] mt-1 tabular-nums">{secondary}</p>}
+      {secondary && <p className="text-[11px] text-[var(--c-text-3)] mt-1 tabular-nums">{secondary}</p>}
     </Card>
   );
 }

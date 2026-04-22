@@ -351,14 +351,14 @@ export default function SpreadsheetPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] md:h-[calc(100vh-2.5rem)] -mx-4 md:-mx-8 -mt-6 md:-mt-10">
       {/* ── Toolbar ── */}
-      <div className="flex flex-col border-b border-[#E6EAEB] bg-white shrink-0">
+      <div className="flex flex-col border-b border-[var(--c-border)] bg-card shrink-0">
         {/* Top bar */}
-        <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-[#EEF1F1]">
+        <div className="flex items-center justify-between px-4 py-2 gap-3 border-b border-[var(--c-border-2)]">
           <div className="flex items-center gap-2">
             {editingName ? (
               <input
                 autoFocus
-                className="text-[13px] font-semibold text-[#0A1519] border-b border-primary outline-none bg-transparent w-32"
+                className="text-[13px] font-semibold text-[var(--c-text)] border-b border-primary outline-none bg-transparent w-32"
                 value={sheetName}
                 onChange={e => setSheetName(e.target.value)}
                 onBlur={() => setEditingName(false)}
@@ -367,21 +367,21 @@ export default function SpreadsheetPage() {
             ) : (
               <button
                 onClick={() => setEditingName(true)}
-                className="text-[13px] font-semibold text-[#0A1519] hover:text-primary transition-colors"
+                className="text-[13px] font-semibold text-[var(--c-text)] hover:text-primary transition-colors"
               >
                 {sheetName}
               </button>
             )}
-            <span className="text-[11px] text-[#7A8B90]">· {lang === "es" ? "guardado automáticamente" : "auto-saved"}</span>
+            <span className="text-[11px] text-[var(--c-text-3)]">· {lang === "es" ? "guardado automáticamente" : "auto-saved"}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={handleSave} className="text-[12px] px-3 py-1 rounded-lg border border-[#E6EAEB] text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">
+            <button onClick={handleSave} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">
               {saved ? "✓ Guardado" : (lang === "es" ? "Guardar" : "Save")}
             </button>
-            <button onClick={exportCSV} className="text-[12px] px-3 py-1 rounded-lg border border-[#E6EAEB] text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors">
+            <button onClick={exportCSV} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">
               CSV
             </button>
-            <button onClick={handleClear} className="text-[12px] px-3 py-1 rounded-lg border border-[#FDEDEE] text-[#E5484D] hover:bg-[#FDEDEE] transition-colors">
+            <button onClick={handleClear} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-expense-bg)] text-[var(--c-expense)] hover:bg-[var(--c-expense-bg)] transition-colors">
               {lang === "es" ? "Limpiar" : "Clear"}
             </button>
           </div>
@@ -391,19 +391,19 @@ export default function SpreadsheetPage() {
         <div className="flex items-center gap-1 px-3 py-1.5 flex-wrap">
           {/* Cell ref */}
           <div className="flex items-center">
-            <div className="w-[72px] text-[11px] font-mono font-medium text-[#0A1519] px-2 py-1 border border-[#E6EAEB] rounded-lg bg-[#F8FAFA] text-center shrink-0">
+            <div className="w-[72px] text-[11px] font-mono font-medium text-[var(--c-text)] px-2 py-1 border border-[var(--c-border)] rounded-lg bg-[var(--c-surface-3)] text-center shrink-0">
               {selRange}
             </div>
           </div>
 
-          <div className="w-px h-5 bg-[#E6EAEB] mx-1" />
+          <div className="w-px h-5 bg-[var(--c-border)] mx-1" />
 
           {/* Formula bar */}
           <div className="flex items-center gap-1 flex-1 min-w-0">
-            <span className="text-[11px] text-[#7A8B90] font-medium shrink-0">fx</span>
+            <span className="text-[11px] text-[var(--c-text-3)] font-medium shrink-0">fx</span>
             <input
               ref={formulaRef}
-              className="flex-1 text-[13px] text-[#0A1519] px-2 py-1 border border-[#E6EAEB] rounded-lg bg-white outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 min-w-0"
+              className="flex-1 text-[13px] text-[var(--c-text)] px-2 py-1 border border-[var(--c-border)] rounded-lg bg-card outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 min-w-0"
               value={formulaBar}
               onChange={e => {
                 setFormulaBar(e.target.value);
@@ -418,43 +418,43 @@ export default function SpreadsheetPage() {
             />
           </div>
 
-          <div className="w-px h-5 bg-[#E6EAEB] mx-1" />
+          <div className="w-px h-5 bg-[var(--c-border)] mx-1" />
 
           {/* Format buttons */}
           <button
             onClick={() => toggleFormat("bold")}
-            className={`w-7 h-7 rounded-md text-[13px] font-bold transition-colors ${activeCell?.bold ? "bg-primary text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}
+            className={`w-7 h-7 rounded-md text-[13px] font-bold transition-colors ${activeCell?.bold ? "bg-primary text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}
           >B</button>
           <button
             onClick={() => toggleFormat("italic")}
-            className={`w-7 h-7 rounded-md text-[13px] italic transition-colors ${activeCell?.italic ? "bg-primary text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}
+            className={`w-7 h-7 rounded-md text-[13px] italic transition-colors ${activeCell?.italic ? "bg-primary text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}
           >I</button>
 
-          <div className="w-px h-5 bg-[#E6EAEB] mx-1" />
+          <div className="w-px h-5 bg-[var(--c-border)] mx-1" />
 
-          <button onClick={() => setAlign("left")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "left" ? "bg-primary text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}>
+          <button onClick={() => setAlign("left")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "left" ? "bg-primary text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><rect x="2" y="3" width="12" height="1.5" rx="0.75"/><rect x="2" y="7" width="8" height="1.5" rx="0.75"/><rect x="2" y="11" width="10" height="1.5" rx="0.75"/></svg>
           </button>
-          <button onClick={() => setAlign("center")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "center" ? "bg-primary text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}>
+          <button onClick={() => setAlign("center")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "center" ? "bg-primary text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><rect x="2" y="3" width="12" height="1.5" rx="0.75"/><rect x="4" y="7" width="8" height="1.5" rx="0.75"/><rect x="3" y="11" width="10" height="1.5" rx="0.75"/></svg>
           </button>
-          <button onClick={() => setAlign("right")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "right" ? "bg-primary text-white" : "text-[#4A5B60] hover:bg-[#F2F5F5]"}`}>
+          <button onClick={() => setAlign("right")} className={`w-7 h-7 rounded-md flex items-center justify-center transition-colors ${activeCell?.align === "right" ? "bg-primary text-white" : "text-[var(--c-text-2)] hover:bg-[var(--c-surface)]"}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5" fill="currentColor"><rect x="2" y="3" width="12" height="1.5" rx="0.75"/><rect x="6" y="7" width="8" height="1.5" rx="0.75"/><rect x="4" y="11" width="10" height="1.5" rx="0.75"/></svg>
           </button>
 
-          <div className="w-px h-5 bg-[#E6EAEB] mx-1" />
+          <div className="w-px h-5 bg-[var(--c-border)] mx-1" />
 
-          <button onClick={() => { dispatch({ type: "ADD_ROW" }); }} className="text-[11px] px-2 py-1 rounded-md text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors whitespace-nowrap">
+          <button onClick={() => { dispatch({ type: "ADD_ROW" }); }} className="text-[11px] px-2 py-1 rounded-md text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors whitespace-nowrap">
             + {lang === "es" ? "Filas" : "Rows"}
           </button>
-          <button onClick={() => { dispatch({ type: "ADD_COL" }); }} className="text-[11px] px-2 py-1 rounded-md text-[#4A5B60] hover:bg-[#F2F5F5] transition-colors whitespace-nowrap">
+          <button onClick={() => { dispatch({ type: "ADD_COL" }); }} className="text-[11px] px-2 py-1 rounded-md text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors whitespace-nowrap">
             + {lang === "es" ? "Columnas" : "Cols"}
           </button>
         </div>
       </div>
 
       {/* ── Grid ── */}
-      <div className="flex-1 overflow-auto bg-white">
+      <div className="flex-1 overflow-auto bg-card">
         <div
           ref={gridRef}
           tabIndex={0}
@@ -463,18 +463,18 @@ export default function SpreadsheetPage() {
           style={{ minWidth: HEADER_WIDTH + state.cols * COL_WIDTH }}
         >
           {/* Column headers */}
-          <div className="flex sticky top-0 z-20 bg-[#F8FAFA] border-b border-[#E6EAEB]" style={{ height: ROW_HEIGHT }}>
+          <div className="flex sticky top-0 z-20 bg-[var(--c-surface-3)] border-b border-[var(--c-border)]" style={{ height: ROW_HEIGHT }}>
             {/* Corner */}
-            <div className="shrink-0 border-r border-[#E6EAEB]" style={{ width: HEADER_WIDTH }} />
+            <div className="shrink-0 border-r border-[var(--c-border)]" style={{ width: HEADER_WIDTH }} />
             {Array.from({ length: state.cols }, (_, c) => (
               <div
                 key={c}
-                className={`shrink-0 flex items-center justify-center text-[11px] font-semibold border-r border-[#E6EAEB] transition-colors ${
+                className={`shrink-0 flex items-center justify-center text-[11px] font-semibold border-r border-[var(--c-border)] transition-colors ${
                   sel.anchor.c === c
                     ? "bg-primary text-white"
                     : c >= minC && c <= maxC
                     ? "bg-primary/15 text-primary"
-                    : "text-[#7A8B90]"
+                    : "text-[var(--c-text-3)]"
                 }`}
                 style={{ width: COL_WIDTH, height: ROW_HEIGHT }}
               >
@@ -485,15 +485,15 @@ export default function SpreadsheetPage() {
 
           {/* Rows */}
           {Array.from({ length: state.rows }, (_, r) => (
-            <div key={r} className="flex border-b border-[#EEF1F1]" style={{ height: ROW_HEIGHT }}>
+            <div key={r} className="flex border-b border-[var(--c-border-2)]" style={{ height: ROW_HEIGHT }}>
               {/* Row header */}
               <div
-                className={`shrink-0 flex items-center justify-center text-[11px] font-semibold border-r border-[#E6EAEB] sticky left-0 z-10 transition-colors ${
+                className={`shrink-0 flex items-center justify-center text-[11px] font-semibold border-r border-[var(--c-border)] sticky left-0 z-10 transition-colors ${
                   sel.anchor.r === r
                     ? "bg-primary text-white"
                     : r >= minR && r <= maxR
                     ? "bg-primary/15 text-primary"
-                    : "bg-[#F8FAFA] text-[#7A8B90]"
+                    : "bg-[var(--c-surface-3)] text-[var(--c-text-3)]"
                 }`}
                 style={{ width: HEADER_WIDTH, height: ROW_HEIGHT }}
               >
@@ -515,10 +515,10 @@ export default function SpreadsheetPage() {
                     ref={el => { cellRefs.current[id] = el; }}
                     className={`shrink-0 relative border-r select-none cursor-default overflow-hidden transition-colors ${
                       active
-                        ? "z-20 border-[#EEF1F1]"
+                        ? "z-20 border-[var(--c-border-2)]"
                         : selected && !(minR === maxR && minC === maxC)
-                        ? "bg-primary/10 border-[#EEF1F1]"
-                        : "border-[#EEF1F1] hover:bg-[#F8FAFA]"
+                        ? "bg-primary/10 border-[var(--c-border-2)]"
+                        : "border-[var(--c-border-2)] hover:bg-[var(--c-surface-3)]"
                     }`}
                     style={{
                       width: COL_WIDTH,
@@ -549,7 +549,7 @@ export default function SpreadsheetPage() {
                     {active && editing ? (
                       <input
                         ref={inputRef}
-                        className="absolute inset-0 w-full h-full px-2 text-[12px] text-[#0A1519] outline-none border-0 bg-white"
+                        className="absolute inset-0 w-full h-full px-2 text-[12px] text-[var(--c-text)] outline-none border-0 bg-card"
                         value={editVal}
                         onChange={e => { setEditVal(e.target.value); setFormulaBar(e.target.value); }}
                         onKeyDown={e => {
@@ -566,7 +566,7 @@ export default function SpreadsheetPage() {
                           fontWeight: cell?.bold ? 700 : 400,
                           fontStyle: cell?.italic ? "italic" : "normal",
                           justifyContent: cell?.align === "center" ? "center" : cell?.align === "right" ? "flex-end" : "flex-start",
-                          color: display.startsWith("#") && display.length > 3 && isNaN(Number(display)) ? "#E5484D" : "#0A1519",
+                          color: display.startsWith("#") && display.length > 3 && isNaN(Number(display)) ? "var(--c-expense)" : "var(--c-text)",
                         }}
                       >
                         {display}
@@ -581,7 +581,7 @@ export default function SpreadsheetPage() {
       </div>
 
       {/* ── Status bar ── */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-1 border-t border-[#E6EAEB] bg-[#F8FAFA] text-[11px] text-[#7A8B90]">
+      <div className="shrink-0 flex items-center justify-between px-4 py-1 border-t border-[var(--c-border)] bg-[var(--c-surface-3)] text-[11px] text-[var(--c-text-3)]">
         <span>{selRange}</span>
         <span>
           {(() => {

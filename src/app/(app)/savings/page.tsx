@@ -42,8 +42,8 @@ export default function DebitHubPage() {
   if (loading) {
     return (
       <div>
-        <h1 className="text-heading text-[#0A1519] mb-1">{t.savings.title}</h1>
-        <p className="text-sm text-[#7A8B90] mb-8">{t.savings.subtitle}</p>
+        <h1 className="text-heading text-[var(--c-text)] mb-1">{t.savings.title}</h1>
+        <p className="text-sm text-[var(--c-text-3)] mb-8">{t.savings.subtitle}</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[900px]">
           <CardSkeleton />
           <CardSkeleton />
@@ -54,8 +54,8 @@ export default function DebitHubPage() {
 
   return (
     <div>
-      <h1 className="text-heading text-[#0A1519] mb-1">Debit</h1>
-      <p className="text-sm text-[#7A8B90] mb-8">Your debit accounts</p>
+      <h1 className="text-heading text-[var(--c-text)] mb-1">Debit</h1>
+      <p className="text-sm text-[var(--c-text-3)] mb-8">Your debit accounts</p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-[900px]">
         {accounts.map((acct) => {
@@ -66,10 +66,10 @@ export default function DebitHubPage() {
                 <AccountCard color={acct.color} colorGradientEnd={acct.config?.colorGradientEnd} />
               </div>
               <Card className="mt-4" padding="sm">
-                <p className="text-[11px] text-[#7A8B90] uppercase tracking-wider mb-1">
+                <p className="text-[11px] text-[var(--c-text-3)] uppercase tracking-wider mb-1">
                   {acct.name} · {acct.currency}
                 </p>
-                <p className={`text-lg font-semibold tabular-nums ${acct.balance < 0 ? "text-[#E5484D]" : "text-[#00A85A]"}`}>
+                <p className={`text-lg font-semibold tabular-nums ${acct.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"}`}>
                   {fmt(acct.balance)}
                 </p>
               </Card>
