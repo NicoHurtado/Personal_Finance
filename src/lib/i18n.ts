@@ -125,6 +125,12 @@ export const translations = {
       errorAmountRequired: "Amount is required",
       errorAmountPositive: "Amount must be greater than 0",
       balance: "Balance",
+      category: "Category",
+      categoryOptional: "Category (optional)",
+      spendingByCategory: "Spending by Category",
+      noExpensesThisMonth: "No expenses for this month",
+      allCategories: "All categories",
+      uncategorized: "Uncategorized",
     },
 
     // ── Credit Cards ──────────────────────────────────────────────────────
@@ -208,6 +214,19 @@ export const translations = {
       avg: "Avg",
       count: "Count",
       confirmClear: "Clear the entire sheet?",
+    },
+
+    // ── Categories ───────────────────────────────────────────────────────
+    categories: {
+      pago: "Payment",
+      retiro: "Withdrawal",
+      salud: "Health",
+      comida: "Food",
+      tecnologia: "Technology",
+      servicio: "Service",
+      entretenimiento: "Entertainment",
+      antojo: "Craving",
+      transporte: "Transport",
     },
 
     // ── Stocks ────────────────────────────────────────────────────────────
@@ -374,6 +393,12 @@ export const translations = {
       errorAmountRequired: "El monto es requerido",
       errorAmountPositive: "El monto debe ser mayor a 0",
       balance: "Saldo",
+      category: "Categoría",
+      categoryOptional: "Categoría (opcional)",
+      spendingByCategory: "Gastos por Categoría",
+      noExpensesThisMonth: "Sin gastos este mes",
+      allCategories: "Todas las categorías",
+      uncategorized: "Sin categoría",
     },
 
     // ── Credit Cards ──────────────────────────────────────────────────────
@@ -457,6 +482,19 @@ export const translations = {
       avg: "Promedio",
       count: "Conteo",
       confirmClear: "¿Borrar toda la hoja?",
+    },
+
+    // ── Categories ───────────────────────────────────────────────────────
+    categories: {
+      pago: "Pago",
+      retiro: "Retiro",
+      salud: "Salud",
+      comida: "Comida",
+      tecnologia: "Tecnología",
+      servicio: "Servicio",
+      entretenimiento: "Entretenimiento",
+      antojo: "Antojo",
+      transporte: "Transporte",
     },
 
     // ── Stocks ────────────────────────────────────────────────────────────

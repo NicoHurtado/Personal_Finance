@@ -25,6 +25,7 @@ interface Category {
   _id: string;
   name: string;
   color: string;
+  key?: string;
 }
 
 interface Account {
@@ -260,11 +261,14 @@ export default function CardDetailPage() {
     catTotals[key] = (catTotals[key] || 0) + Math.abs(t.amount);
   });
 
-  const pieData = Object.entries(catTotals).map(([key, value]) => ({
-    name: key === "__uncategorized" ? t.creditCards.uncategorized : (catMap[key]?.name || t.creditCards.uncategorized),
-    value,
-    color: key === "__uncategorized" ? "var(--c-uncat)" : (catMap[key]?.color || "var(--c-uncat)"),
-  }));
+  const catTranslations = t.categories as Record<string, string>;
+  const pieData = Object.entries(catTotals).map(([key, value]) => {
+    const cat = catMap[key];
+    const name = key === "__uncategorized"
+      ? t.creditCards.uncategorized
+      : (cat?.key ? (catTranslations[cat.key] ?? cat.name) : (cat?.name || t.creditCards.uncategorized));
+    return { name, value, color: key === "__uncategorized" ? "var(--c-uncat)" : (cat?.color || "var(--c-uncat)") };
+  });
 
   const now = new Date();
   const cutoffMonth = now.getDate() >= billingCutoffDay ? now.getMonth() + 1 : now.getMonth();
@@ -348,7 +352,7 @@ export default function CardDetailPage() {
             <option value="">{t.creditCards.allCategories}</option>
             <option value="__uncategorized">{t.creditCards.uncategorized}</option>
             {categories.map((c) => (
-              <option key={c._id} value={c._id}>{c.name}</option>
+              <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
             ))}
           </select>
         </div>
@@ -419,7 +423,7 @@ export default function CardDetailPage() {
                         >
                           <option value="">--</option>
                           {categories.map((c) => (
-                            <option key={c._id} value={c._id}>{c.name}</option>
+                            <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
                           ))}
                         </select>
                       </td>
@@ -518,7 +522,7 @@ export default function CardDetailPage() {
               className={`w-full ${inputCls}`}>
               <option value="">{t.creditCards.noneCategory}</option>
               {categories.map((c) => (
-                <option key={c._id} value={c._id}>{c.name}</option>
+                <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
               ))}
             </select>
           </div>

@@ -115,13 +115,15 @@ const ACCOUNT_SEEDS: AccountSeed[] = [
 ];
 
 const CATEGORY_SEEDS = [
-  { name: "Food", color: "#025864" },
-  { name: "Stuff", color: "#0A5A7A" },
-  { name: "Digital", color: "#4FB7C2" },
-  { name: "Clothes", color: "#A7C4C9" },
-  { name: "Education", color: "#4A5B60" },
-  { name: "Tech", color: "#7A8B90" },
-  { name: "Payment", color: "#00D47E" },
+  { name: "Pago", key: "pago", color: "#00D47E" },
+  { name: "Retiro", key: "retiro", color: "#4A9B8E" },
+  { name: "Salud", key: "salud", color: "#E85D75" },
+  { name: "Comida", key: "comida", color: "#F59E0B" },
+  { name: "Tecnologia", key: "tecnologia", color: "#4FB7C2" },
+  { name: "Servicio", key: "servicio", color: "#7A8B90" },
+  { name: "Entretenimiento", key: "entretenimiento", color: "#8B5CF6" },
+  { name: "Antojo", key: "antojo", color: "#F97316" },
+  { name: "Transporte", key: "transporte", color: "#3B82F6" },
 ];
 
 /**

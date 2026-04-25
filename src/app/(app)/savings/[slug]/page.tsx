@@ -18,6 +18,10 @@ import {
   YAxis,
   Tooltip,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
 } from "recharts";
 
 interface Account {
@@ -27,12 +31,20 @@ interface Account {
   currency: "COP" | "USD";
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  color: string;
+  key?: string;
+}
+
 interface Transaction {
   _id: string;
   date: string;
   description: string;
   amount: number;
   type: "Income" | "Expense";
+  categoryId?: string;
 }
 
 interface FormData {
@@ -40,6 +52,7 @@ interface FormData {
   description: string;
   amount: string;
   type: "Income" | "Expense";
+  categoryId: string;
 }
 
 interface FormErrors {
@@ -48,7 +61,7 @@ interface FormErrors {
   amount?: string;
 }
 
-const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income" };
+const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income", categoryId: "" };
 
 function validateForm(form: FormData, msgs: { dateRequired: string; descRequired: string; amountRequired: string; amountPositive: string }): FormErrors {
   const errors: FormErrors = {};
@@ -66,6 +79,18 @@ function formatCompact(v: number): string {
   return String(v);
 }
 
+function monthOptions(locale: string) {
+  const now = new Date();
+  const opts: { label: string; value: string }[] = [];
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+    const label = d.toLocaleString(locale, { month: "long", year: "numeric" });
+    opts.push({ label, value });
+  }
+  return opts;
+}
+
 export default function DebitAccountPage() {
   const tr = useT();
   const { lang } = useLangStore();
@@ -73,6 +98,7 @@ export default function DebitAccountPage() {
   const accountSlug = params.slug as string;
 
   const [account, setAccount] = useState<Account | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [allLoading, setAllLoading] = useState(true);
 
@@ -92,6 +118,7 @@ export default function DebitAccountPage() {
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
+  const [catFilter, setCatFilter] = useState("");
 
   const [chartView, setChartView] = useState<"month" | "year">("month");
   const [selectedMonth, setSelectedMonth] = useState(() => {
@@ -99,21 +126,33 @@ export default function DebitAccountPage() {
     return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
   });
 
+  const [pieMonth, setPieMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+  });
+
   const fmt = account?.currency === "USD" ? formatUSD : formatCOP;
+  const locale = lang === "es" ? "es-CO" : "en-US";
+  const catTranslations = tr.categories as Record<string, string>;
+
+  const catMap = useMemo(() => Object.fromEntries(categories.map((c) => [c._id, c])), [categories]);
 
   const fetchAll = useCallback(async () => {
     if (!accountSlug) return;
     setAllLoading(true);
     try {
-      const [txRes, accRes] = await Promise.all([
+      const [txRes, accRes, catsRes] = await Promise.all([
         fetch(`/api/v2/transactions?account=${accountSlug}&limit=1000`),
         fetch("/api/v2/accounts"),
+        fetch("/api/v2/categories"),
       ]);
       const json = await txRes.json();
       setAllTransactions(json.data ?? []);
       const accounts: Account[] = await accRes.json();
       const found = accounts.find((a) => a.slug === accountSlug);
       if (found) setAccount(found);
+      const cats: Category[] = await catsRes.json();
+      setCategories(cats);
     } catch { /* silent */ } finally {
       setAllLoading(false);
     }
@@ -130,29 +169,24 @@ export default function DebitAccountPage() {
       filtered = filtered.filter((t) => t.description.toLowerCase().includes(q));
     }
     if (typeFilter) filtered = filtered.filter((t) => t.type === typeFilter);
+    if (catFilter) {
+      if (catFilter === "__uncategorized") {
+        filtered = filtered.filter((t) => !t.categoryId);
+      } else {
+        filtered = filtered.filter((t) => t.categoryId === catFilter);
+      }
+    }
     return filtered;
-  }, [allTransactions, search, typeFilter]);
+  }, [allTransactions, search, typeFilter, catFilter]);
 
   const ITEMS_PER_PAGE = 10;
   const [clientPage, setClientPage] = useState(1);
   const clientTotalPages = Math.max(1, Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE));
   const clientPaged = filteredTransactions.slice((clientPage - 1) * ITEMS_PER_PAGE, clientPage * ITEMS_PER_PAGE);
 
-  useEffect(() => { setClientPage(1); }, [search, typeFilter]);
+  useEffect(() => { setClientPage(1); }, [search, typeFilter, catFilter]);
 
-  const locale = lang === "es" ? "es-CO" : "en-US";
-
-  const monthOptions = useMemo(() => {
-    const opts: { label: string; value: string }[] = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleString(locale, { month: "long", year: "numeric" });
-      opts.push({ label, value });
-    }
-    return opts;
-  }, [locale]);
+  const moOptions = useMemo(() => monthOptions(locale), [locale]);
 
   const chartData = useMemo(() => {
     const sorted = [...allTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -203,6 +237,27 @@ export default function DebitAccountPage() {
     }
   }, [allTransactions, chartView, selectedMonth]);
 
+  const pieData = useMemo(() => {
+    const [selYear, selMo] = pieMonth.split("-").map(Number);
+    const expenses = allTransactions.filter((t) => {
+      if (t.type !== "Expense") return false;
+      const d = new Date(t.date);
+      return d.getFullYear() === selYear && d.getMonth() + 1 === selMo;
+    });
+    const totals: Record<string, number> = {};
+    expenses.forEach((t) => {
+      const k = t.categoryId || "__uncategorized";
+      totals[k] = (totals[k] || 0) + Math.abs(t.amount);
+    });
+    return Object.entries(totals).map(([k, value]) => {
+      const cat = catMap[k];
+      const name = k === "__uncategorized"
+        ? tr.savings.uncategorized
+        : (cat?.key ? (catTranslations[cat.key] ?? cat.name) : (cat?.name || tr.savings.uncategorized));
+      return { name, value, color: k === "__uncategorized" ? "var(--c-uncat)" : (cat?.color || "var(--c-uncat)") };
+    });
+  }, [allTransactions, pieMonth, catMap, catTranslations, tr.savings.uncategorized]);
+
   const validationMsgs = { dateRequired: tr.savings.errorDateRequired, descRequired: tr.savings.errorDescriptionRequired, amountRequired: tr.savings.errorAmountRequired, amountPositive: tr.savings.errorAmountPositive };
 
   const handleAdd = async () => {
@@ -220,6 +275,7 @@ export default function DebitAccountPage() {
           description: addForm.description,
           amount: Number(addForm.amount),
           type: addForm.type,
+          categoryId: addForm.categoryId || undefined,
           metadata: addIsCardPayment ? { isCardPayment: true } : {},
         }),
       });
@@ -235,7 +291,7 @@ export default function DebitAccountPage() {
 
   const startEdit = (t: Transaction) => {
     setEditingId(t._id);
-    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type });
+    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type, categoryId: t.categoryId || "" });
     setEditErrors({});
   };
 
@@ -248,7 +304,7 @@ export default function DebitAccountPage() {
       await fetch(`/api/v2/transactions/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type }),
+        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type, categoryId: editForm.categoryId || null }),
       });
       setEditingId(null);
       setEditErrors({});
@@ -256,6 +312,17 @@ export default function DebitAccountPage() {
     } catch { /* silent */ } finally {
       setEditSubmitting(false);
     }
+  };
+
+  const handleCategoryChange = async (txId: string, catId: string) => {
+    try {
+      await fetch(`/api/v2/transactions/${txId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ categoryId: catId || null }),
+      });
+      await fetchAll();
+    } catch { /* silent */ }
   };
 
   const handleDelete = async () => {
@@ -328,6 +395,19 @@ export default function DebitAccountPage() {
           ]}
           filterLabel={tr.savings.filterLabel}
         />
+        <div className="flex items-center gap-2 mb-4">
+          <select
+            value={catFilter}
+            onChange={(e) => setCatFilter(e.target.value)}
+            className="px-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
+          >
+            <option value="">{tr.savings.allCategories}</option>
+            <option value="__uncategorized">{tr.savings.uncategorized}</option>
+            {categories.map((c) => (
+              <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
+            ))}
+          </select>
+        </div>
 
         <div className="overflow-x-auto -mx-5 md:-mx-6">
           <table className="w-full text-sm">
@@ -337,6 +417,7 @@ export default function DebitAccountPage() {
                 <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{tr.savings.description}</th>
                 <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{tr.savings.amount}</th>
                 <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{tr.savings.type}</th>
+                <th className="px-3 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider">{tr.savings.category}</th>
                 <th className="px-5 md:px-6 pb-3 text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider text-right">{tr.savings.actions}</th>
               </tr>
             </thead>
@@ -366,6 +447,15 @@ export default function DebitAccountPage() {
                         <option value="Expense">{tr.savings.expense}</option>
                       </select>
                     </td>
+                    <td className="px-3 py-3">
+                      <select value={editForm.categoryId} onChange={(e) => setEditForm({ ...editForm, categoryId: e.target.value })}
+                        className={`${inputSmCls} max-w-[130px]`}>
+                        <option value="">--</option>
+                        {categories.map((c) => (
+                          <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-5 md:px-6 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
                         <button onClick={handleEdit} disabled={editSubmitting}
@@ -391,6 +481,18 @@ export default function DebitAccountPage() {
                         {t.type === "Income" ? tr.savings.income : tr.savings.expense}
                       </span>
                     </td>
+                    <td className="px-3 py-3.5">
+                      <select
+                        value={t.categoryId || ""}
+                        onChange={(e) => handleCategoryChange(t._id, e.target.value)}
+                        className={`${inputSmCls} text-xs max-w-[130px]`}
+                      >
+                        <option value="">--</option>
+                        {categories.map((c) => (
+                          <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
+                        ))}
+                      </select>
+                    </td>
                     <td className="px-5 md:px-6 py-3.5 text-right">
                       <div className="flex gap-1.5 justify-end">
                         <button onClick={() => startEdit(t)}
@@ -403,8 +505,8 @@ export default function DebitAccountPage() {
                 )
               )}
               {clientPaged.length === 0 && (
-                <tr><td colSpan={5} className="py-10 text-center text-[var(--c-text-3)] text-sm">
-                  {search || typeFilter ? tr.savings.noMatchingTransactions : tr.savings.noTransactions}
+                <tr><td colSpan={6} className="py-10 text-center text-[var(--c-text-3)] text-sm">
+                  {search || typeFilter || catFilter ? tr.savings.noMatchingTransactions : tr.savings.noTransactions}
                 </td></tr>
               )}
             </tbody>
@@ -413,13 +515,39 @@ export default function DebitAccountPage() {
         <Pagination currentPage={clientPage} totalPages={clientTotalPages} onPageChange={setClientPage} />
       </Card>
 
+      {/* Spending by Category */}
+      <Card>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
+          <h2 className="text-[15px] font-medium text-[var(--c-text)]">{tr.savings.spendingByCategory}</h2>
+          <select value={pieMonth} onChange={(e) => setPieMonth(e.target.value)} className={inputCls}>
+            {moOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </div>
+        {pieData.length === 0 ? (
+          <p className="text-[var(--c-text-3)] text-sm text-center py-10">{tr.savings.noExpensesThisMonth}</p>
+        ) : (
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={60} outerRadius={110} paddingAngle={2}>
+                {pieData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip formatter={(value: any) => fmt(Number(value))} contentStyle={{ borderRadius: "10px", border: "1px solid var(--c-border)", fontSize: 12, boxShadow: "0 4px 16px rgba(10,21,25,0.06)" }} />
+              <Legend formatter={(value: string) => <span className="text-xs text-[var(--c-text-2)]">{value}</span>} />
+            </PieChart>
+          </ResponsiveContainer>
+        )}
+      </Card>
+
+      {/* Balance Over Time */}
       <Card>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-2">
           <h2 className="text-[15px] font-medium text-[var(--c-text)]">{tr.savings.balanceOverTime}</h2>
           <div className="flex items-center gap-2">
             {chartView === "month" && (
               <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className={inputCls}>
-                {monthOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {moOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             )}
             <div className="flex rounded-lg border border-[var(--c-border)] overflow-hidden">
@@ -487,6 +615,16 @@ export default function DebitAccountPage() {
               className={`w-full ${inputCls}`}>
               <option value="Income">{tr.savings.income}</option>
               <option value="Expense">{tr.savings.expense}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{tr.savings.categoryOptional}</label>
+            <select value={addForm.categoryId} onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
+              className={`w-full ${inputCls}`}>
+              <option value="">--</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
+              ))}
             </select>
           </div>
           <label className="flex items-center gap-2 cursor-pointer select-none">
