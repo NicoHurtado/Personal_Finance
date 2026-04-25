@@ -149,6 +149,13 @@ html.dark ::-webkit-scrollbar-thumb {
   background: oklch(0.35 0 0);
 }
 
+/* Mobile safe-area bottom padding for main content */
+@media (max-width: 767px) {
+  .main-mobile-safe {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
 /* Hide scrollbar for card carousels */
 .scrollbar-none {
   scrollbar-width: none;

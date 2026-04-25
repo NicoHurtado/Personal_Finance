@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Outfit } from "next/font/google";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,16 @@ export const metadata: Metadata = {
   formatDetection: { telephone: false },
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,7 +36,6 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", outfit.variable)} suppressHydrationWarning>
       <head>
-        <meta name="theme-color" content="#ffffff" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.svg" />
         {/* Apply dark class BEFORE first paint to avoid flash */}
         <script

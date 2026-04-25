@@ -219,8 +219,12 @@ export default function Sidebar() {
       </aside>
 
       {/* Mobile bottom tab bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 border-t border-sidebar-border z-40 flex justify-around py-2 safe-area-bottom"
-        style={{ backgroundColor: dark ? "oklch(0.205 0 0)" : "#ffffff" }}
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 border-t border-sidebar-border z-40 flex justify-around pt-2"
+        style={{
+          backgroundColor: dark ? "oklch(0.205 0 0)" : "#ffffff",
+          paddingBottom: "calc(0.5rem + env(safe-area-inset-bottom))",
+        }}
       >
         {bottomBarItems.map((item) => {
           const active = isActive(item.href);
@@ -260,7 +264,10 @@ export default function Sidebar() {
           {/* Drawer panel */}
           <div
             className="relative ml-auto w-72 h-full flex flex-col border-l border-sidebar-border shadow-xl"
-            style={{ backgroundColor: dark ? "oklch(0.205 0 0)" : "#ffffff" }}
+            style={{
+              backgroundColor: dark ? "oklch(0.205 0 0)" : "#ffffff",
+              paddingTop: "env(safe-area-inset-top)",
+            }}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 pt-6 pb-4 border-b border-sidebar-border">
