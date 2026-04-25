@@ -3,7 +3,6 @@
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import Card from "@/components/Card";
-import { AccountCard } from "@/components/CardVisuals";
 import { CardSkeleton, TableSkeleton, ChartSkeleton, Skeleton } from "@/components/Skeleton";
 import { formatCOP, formatUSD, formatDate } from "@/lib/format";
 import { computeCajitaBalance, type CajitaConfig } from "@/lib/cajita";
@@ -106,6 +105,7 @@ export default function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState<string>(ymKey(new Date()));
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
 
+  const [userName, setUserName] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [recentActivityRaw, setRecentActivityRaw] = useState<Transaction[]>([]);
   const [serverCashFlow, setServerCashFlow] = useState<CashFlowMap>({});
@@ -113,6 +113,13 @@ export default function DashboardPage() {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [stockPrices, setStockPrices] = useState<StockQuote[]>([]);
   const [trm, setTrm] = useState<number>(0);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data) => { if (data.user?.name) setUserName(data.user.name.split(" ")[0]); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/v2/transactions/summary")
@@ -402,14 +409,14 @@ export default function DashboardPage() {
       <div className="flex items-end justify-between gap-2">
         <div>
           <p className="text-[13px] text-[var(--c-text-3)]">{dateStr}</p>
-          <h1 className="text-heading text-[var(--c-text)] mt-1">{greeting}</h1>
+          <h1 className="text-heading text-[var(--c-text)] mt-1">{greeting}{userName ? `, ${userName}` : ""}</h1>
         </div>
         <div className="hidden md:flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
             </svg>
-            Last 30 days
+            {t.dashboard.last30Days}
           </div>
           <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
             TRM <span className="font-medium text-[var(--c-text)] tabular-nums">{formatCOP(trm)}</span>
@@ -432,7 +439,7 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-[11px] text-white/60">{t.nav.debit}</p>
                   <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(liquidityCOP)}</p>
-                  {liquidityUSD !== 0 && <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(liquidityUSD)} in USD</p>}
+                  {liquidityUSD !== 0 && <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(liquidityUSD)} {t.dashboard.inUSD}</p>}
                 </div>
               )}
               {fixedIncomeCOP !== 0 && (
@@ -484,7 +491,7 @@ export default function DashboardPage() {
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18" /></svg>}
           label={t.nav.debit}
           value={formatCOP(liquidityCOP)}
-          secondary={liquidityUSD !== 0 ? `${formatUSD(liquidityUSD)} in USD` : undefined}
+          secondary={liquidityUSD !== 0 ? `${formatUSD(liquidityUSD)} ${t.dashboard.inUSD}` : undefined}
           period={t.savings.title}
         />
         <StatCard
@@ -494,13 +501,15 @@ export default function DashboardPage() {
           growthAmount={fixedIncomeGrowth}
           period={t.dashboard.hasGrown}
         />
-        <StatCard
-          icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
-          label={t.dashboard.investments}
-          value={formatCOP(hapiCOP)}
-          secondary={formatUSD(hapiUSD)}
-          period={t.nav.stocks}
-        />
+        {hapiCOP !== 0 && (
+          <StatCard
+            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
+            label={t.dashboard.investments}
+            value={formatCOP(hapiCOP)}
+            secondary={formatUSD(hapiUSD)}
+            period={t.nav.stocks}
+          />
+        )}
         <StatCard
           icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>}
           label={t.dashboard.totalDebt}
@@ -566,7 +575,7 @@ export default function DashboardPage() {
                 <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--c-text-5)", fontWeight: 400 }} tickLine={false} axisLine={false} interval={chartView === "month" ? "preserveStartEnd" : 0} dy={6} />
                 <YAxis yAxisId="capital" tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
                 <YAxis yAxisId="expense" orientation="right" domain={[0, expenseDomainMax]} tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
-                <Tooltip cursor={{ fill: "rgba(2,88,100,0.03)" }} content={<CashFlowTooltip chartView={chartView} />} />
+                <Tooltip cursor={{ fill: "rgba(2,88,100,0.03)" }} content={<CashFlowTooltip chartView={chartView} tDashboard={t.dashboard} />} />
                 <Bar yAxisId="expense" dataKey="expenseBar" fill="url(#expenseBarFill)" radius={[4, 4, 0, 0]} name="expense" maxBarSize={28} />
                 <Area yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} fill="url(#capitalFill)" name="capital" />
                 <Line yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--c-brand)", stroke: "var(--c-tooltip-bg)", strokeWidth: 2 }} legendType="none" />
@@ -595,7 +604,7 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.expenses}</p>
               <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
-              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `Year ${selectedYear}`}</p>
+              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
             </div>
           </Card>
         </div>
@@ -646,34 +655,35 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-              <h2 className="text-title text-[var(--c-text)]">My Cards</h2>
+              <h2 className="text-title text-[var(--c-text)]">{t.dashboard.myCards}</h2>
             </div>
           </div>
 
-          {walletCards.length > 0 && (
-            <div className="relative w-full mb-5" style={{ aspectRatio: `1.586 / ${1 + walletCards.length * 0.24}` }}>
-              {walletCards.map((card, i) => {
-                const href = card.type === "credit_card" ? `/credit-cards/${card.slug.replace(/-tc$/, "")}` : `/savings/${card.slug}`;
-                return (
-                  <Link key={card._id} href={href} aria-label={card.name} className="absolute inset-x-0 transition-transform duration-200 ease-out hover:-translate-y-1.5 hover:z-30" style={{ top: `${i * 14}%`, zIndex: walletCards.length - i }}>
-                    <AccountCard color={card.color} colorGradientEnd={card.config?.colorGradientEnd as string | undefined} />
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="space-y-2 text-[12px] pt-2 border-t border-[var(--c-border-2)]">
+          <div className="flex flex-col gap-2">
             {walletCards.map((card) => {
               const isUsd = card.currency === "USD";
               const fmt = isUsd ? formatUSD : formatCOP;
+              const href = card.type === "credit_card"
+                ? `/credit-cards/${card.slug.replace(/-tc$/, "")}`
+                : `/savings/${card.slug}`;
+              const gradientEnd = card.config?.colorGradientEnd as string | undefined;
               return (
-                <div key={card._id} className="flex items-center justify-between">
-                  <span className="inline-flex items-center gap-2 text-[var(--c-text-2)]">
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: card.color }} /> {card.name}
+                <Link
+                  key={card._id}
+                  href={href}
+                  className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[var(--c-surface-2)] transition-colors group"
+                >
+                  <div
+                    className="w-10 h-6 rounded-md shrink-0 shadow-sm"
+                    style={{ background: `linear-gradient(135deg, ${card.color} 0%, ${gradientEnd || card.color} 100%)` }}
+                  />
+                  <span className="flex-1 text-[12px] text-[var(--c-text-2)] group-hover:text-[var(--c-text)] transition-colors truncate">
+                    {card.name}
                   </span>
-                  <span className={`tabular-nums font-medium ${card.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>{fmt(card.balance)}</span>
-                </div>
+                  <span className={`text-[12px] tabular-nums font-medium shrink-0 ${card.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>
+                    {fmt(card.balance)}
+                  </span>
+                </Link>
               );
             })}
           </div>
@@ -685,33 +695,33 @@ export default function DashboardPage() {
 
 /* ---------- CashFlowTooltip ---------- */
 
-function CashFlowTooltip({ active, payload, label, chartView }: any) {
+function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload;
   if (!row) return null;
 
   const txs: DailyTx[] = row.transactions || [];
-  const expenses = txs.filter((t) => t.type === "Expense");
+  const expenses = txs.filter((tx) => tx.type === "Expense");
 
   if (chartView === "month") {
     return (
       <div className="bg-card/95 backdrop-blur-sm border border-[var(--c-border)] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5 max-w-[240px]">
-        <p className="text-[11px] font-medium text-[var(--c-text-4)] mb-2.5 uppercase tracking-wider">Day {label}</p>
+        <p className="text-[11px] font-medium text-[var(--c-text-4)] mb-2.5 uppercase tracking-wider">{tDashboard.day} {label}</p>
         <div className="flex items-center justify-between gap-4 mb-2.5 pb-2.5 border-b border-[var(--c-chart-grid)]">
-          <span className="text-[11px] text-[var(--c-text-2)]">Capital</span>
+          <span className="text-[11px] text-[var(--c-text-2)]">{tDashboard.capital}</span>
           <span className="text-[12px] font-semibold text-[var(--c-brand)] tabular-nums">{formatCOP(row.capital)}</span>
         </div>
         {expenses.length > 0 ? (
           <div className="space-y-1">
-            {expenses.map((t, i) => (
+            {expenses.map((tx: DailyTx, i: number) => (
               <div key={i} className="flex items-center justify-between gap-3">
-                <span className="text-[11px] text-[var(--c-text-3)] truncate">{t.description}</span>
-                <span className="text-[11px] font-medium text-[var(--c-expense)] tabular-nums whitespace-nowrap">{formatCOP(t.amount)}</span>
+                <span className="text-[11px] text-[var(--c-text-3)] truncate">{tx.description}</span>
+                <span className="text-[11px] font-medium text-[var(--c-expense)] tabular-nums whitespace-nowrap">{formatCOP(tx.amount)}</span>
               </div>
             ))}
           </div>
         ) : (
-          <p className="text-[11px] text-[var(--c-text-5)]">No expenses</p>
+          <p className="text-[11px] text-[var(--c-text-5)]">{tDashboard.noExpenses}</p>
         )}
       </div>
     );
@@ -721,11 +731,11 @@ function CashFlowTooltip({ active, payload, label, chartView }: any) {
     <div className="bg-card/95 backdrop-blur-sm border border-[var(--c-border)] rounded-2xl shadow-xl shadow-black/5 px-4 py-3.5">
       <p className="text-[11px] font-medium text-[var(--c-text-4)] mb-2.5 uppercase tracking-wider">{label}</p>
       <div className="flex items-center justify-between gap-6 mb-1.5">
-        <span className="text-[11px] text-[var(--c-text-2)]">Capital</span>
+        <span className="text-[11px] text-[var(--c-text-2)]">{tDashboard.capital}</span>
         <span className="text-[12px] font-semibold text-[var(--c-brand)] tabular-nums">{formatCOP(row.capital)}</span>
       </div>
       <div className="flex items-center justify-between gap-6">
-        <span className="text-[11px] text-[var(--c-text-2)]">Expenses</span>
+        <span className="text-[11px] text-[var(--c-text-2)]">{tDashboard.expenses}</span>
         <span className="text-[12px] font-semibold text-[var(--c-expense)] tabular-nums">{formatCOP(row.expenseBar)}</span>
       </div>
     </div>

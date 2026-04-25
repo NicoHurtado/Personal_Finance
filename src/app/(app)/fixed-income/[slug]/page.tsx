@@ -208,12 +208,12 @@ export default function CajitaPage() {
   const handleAdd = async () => {
     setAddError("");
     if (!addDate) {
-      setAddError("Date is required.");
+      setAddError(t.fixedIncome.errorDateRequired);
       return;
     }
     const amount = parseFloat(addAmount);
     if (isNaN(amount) || amount <= 0) {
-      setAddError("Amount must be greater than 0.");
+      setAddError(t.fixedIncome.errorAmountPositive);
       return;
     }
 
@@ -239,7 +239,7 @@ export default function CajitaPage() {
       setAddIsNotExpense(false);
       await fetchDeposits();
     } catch {
-      setAddError("Failed to save. Please try again.");
+      setAddError(t.fixedIncome.failedToSave);
     } finally {
       setAddSubmitting(false);
     }

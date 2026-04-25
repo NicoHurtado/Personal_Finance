@@ -3,8 +3,8 @@ export const translations = {
     // ── Sidebar ──────────────────────────────────────────────────────────
     nav: {
       dashboard: "Dashboard",
-      debit: "Debit",
-      cards: "Cards",
+      debit: "T. Debit",
+      cards: "T. Credit",
       fixedIncome: "Fixed Income",
       stocks: "Stocks",
       general: "General",
@@ -12,6 +12,11 @@ export const translations = {
       personal: "Personal",
       signOut: "Sign out",
       spreadsheet: "Spreadsheet",
+      lightMode: "Light mode",
+      darkMode: "Dark mode",
+      more: "More",
+      switchToEnglish: "Switch to English",
+      switchToSpanish: "Switch to Spanish",
     },
 
     // ── Common ────────────────────────────────────────────────────────────
@@ -80,6 +85,12 @@ export const translations = {
       viewAll: "View all",
       hasGrown: "It has grown",
       currentBalance: "Current Balance",
+      myCards: "My Cards",
+      last30Days: "Last 30 days",
+      inUSD: "in USD",
+      day: "Day",
+      noExpenses: "No expenses",
+      yearLabel: "Year",
     },
 
     // ── Savings / Debit ───────────────────────────────────────────────────
@@ -107,6 +118,13 @@ export const translations = {
       adding: "Adding...",
       monthly: "Monthly",
       yearly: "Yearly",
+      transactionSingular: "transaction",
+      transactionPlural: "transactions",
+      errorDateRequired: "Date is required",
+      errorDescriptionRequired: "Description is required",
+      errorAmountRequired: "Amount is required",
+      errorAmountPositive: "Amount must be greater than 0",
+      balance: "Balance",
     },
 
     // ── Credit Cards ──────────────────────────────────────────────────────
@@ -173,6 +191,23 @@ export const translations = {
       accruedInterest: "Accrued Interest",
       noDeposits: "No deposits yet.",
       searchPlaceholder: "Search deposits...",
+      errorDateRequired: "Date is required.",
+      errorAmountPositive: "Amount must be greater than 0.",
+      failedToSave: "Failed to save. Please try again.",
+    },
+
+    // ── Spreadsheet ───────────────────────────────────────────────────────────
+    spreadsheet: {
+      autoSaved: "auto-saved",
+      save: "Save",
+      saved: "✓ Saved",
+      clear: "Clear",
+      rows: "Rows",
+      cols: "Cols",
+      sum: "Sum",
+      avg: "Avg",
+      count: "Count",
+      confirmClear: "Clear the entire sheet?",
     },
 
     // ── Stocks ────────────────────────────────────────────────────────────
@@ -217,8 +252,8 @@ export const translations = {
     // ── Sidebar ──────────────────────────────────────────────────────────
     nav: {
       dashboard: "Inicio",
-      debit: "Débito",
-      cards: "Tarjetas",
+      debit: "T. Débito",
+      cards: "T. Crédito",
       fixedIncome: "Renta Fija",
       stocks: "Acciones",
       general: "General",
@@ -226,6 +261,11 @@ export const translations = {
       personal: "Personal",
       signOut: "Cerrar sesión",
       spreadsheet: "Hoja de cálculo",
+      lightMode: "Modo claro",
+      darkMode: "Modo oscuro",
+      more: "Más",
+      switchToEnglish: "Cambiar a Inglés",
+      switchToSpanish: "Cambiar a Español",
     },
 
     // ── Common ────────────────────────────────────────────────────────────
@@ -294,6 +334,12 @@ export const translations = {
       viewAll: "Ver todo",
       hasGrown: "Así ha crecido",
       currentBalance: "Saldo Actual",
+      myCards: "Mis Tarjetas",
+      last30Days: "Últimos 30 días",
+      inUSD: "en USD",
+      day: "Día",
+      noExpenses: "Sin gastos",
+      yearLabel: "Año",
     },
 
     // ── Savings / Debit ───────────────────────────────────────────────────
@@ -321,6 +367,13 @@ export const translations = {
       adding: "Agregando...",
       monthly: "Mensual",
       yearly: "Anual",
+      transactionSingular: "transacción",
+      transactionPlural: "transacciones",
+      errorDateRequired: "La fecha es requerida",
+      errorDescriptionRequired: "La descripción es requerida",
+      errorAmountRequired: "El monto es requerido",
+      errorAmountPositive: "El monto debe ser mayor a 0",
+      balance: "Saldo",
     },
 
     // ── Credit Cards ──────────────────────────────────────────────────────
@@ -387,6 +440,23 @@ export const translations = {
       accruedInterest: "Interés Acumulado",
       noDeposits: "Aún no hay depósitos.",
       searchPlaceholder: "Buscar depósitos...",
+      errorDateRequired: "La fecha es requerida.",
+      errorAmountPositive: "El monto debe ser mayor a 0.",
+      failedToSave: "Error al guardar. Intenta de nuevo.",
+    },
+
+    // ── Spreadsheet ───────────────────────────────────────────────────────────
+    spreadsheet: {
+      autoSaved: "guardado automáticamente",
+      save: "Guardar",
+      saved: "✓ Guardado",
+      clear: "Limpiar",
+      rows: "Filas",
+      cols: "Columnas",
+      sum: "Suma",
+      avg: "Promedio",
+      count: "Conteo",
+      confirmClear: "¿Borrar toda la hoja?",
     },
 
     // ── Stocks ────────────────────────────────────────────────────────────

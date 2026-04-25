@@ -50,12 +50,12 @@ interface FormErrors {
 
 const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income" };
 
-function validateForm(form: FormData): FormErrors {
+function validateForm(form: FormData, msgs: { dateRequired: string; descRequired: string; amountRequired: string; amountPositive: string }): FormErrors {
   const errors: FormErrors = {};
-  if (!form.date) errors.date = "Date is required";
-  if (!form.description.trim()) errors.description = "Description is required";
-  if (!form.amount) errors.amount = "Amount is required";
-  else if (Number(form.amount) <= 0) errors.amount = "Amount must be greater than 0";
+  if (!form.date) errors.date = msgs.dateRequired;
+  if (!form.description.trim()) errors.description = msgs.descRequired;
+  if (!form.amount) errors.amount = msgs.amountRequired;
+  else if (Number(form.amount) <= 0) errors.amount = msgs.amountPositive;
   return errors;
 }
 
@@ -203,8 +203,10 @@ export default function DebitAccountPage() {
     }
   }, [allTransactions, chartView, selectedMonth]);
 
+  const validationMsgs = { dateRequired: tr.savings.errorDateRequired, descRequired: tr.savings.errorDescriptionRequired, amountRequired: tr.savings.errorAmountRequired, amountPositive: tr.savings.errorAmountPositive };
+
   const handleAdd = async () => {
-    const errors = validateForm(addForm);
+    const errors = validateForm(addForm, validationMsgs);
     setAddErrors(errors);
     if (Object.keys(errors).length > 0) return;
     setAddSubmitting(true);
@@ -238,7 +240,7 @@ export default function DebitAccountPage() {
   };
 
   const handleEdit = async () => {
-    const errors = validateForm(editForm);
+    const errors = validateForm(editForm, validationMsgs);
     setEditErrors(errors);
     if (Object.keys(errors).length > 0) return;
     setEditSubmitting(true);
@@ -299,7 +301,7 @@ export default function DebitAccountPage() {
           {fmt(balance)}
         </p>
         <p className="text-[11px] text-[var(--c-text-3)] mt-2">
-          {allTransactions.length} transaction{allTransactions.length !== 1 ? "s" : ""}
+          {allTransactions.length} {allTransactions.length !== 1 ? tr.savings.transactionPlural : tr.savings.transactionSingular}
         </p>
       </Card>
 
@@ -446,7 +448,7 @@ export default function DebitAccountPage() {
                 <XAxis dataKey="date" tick={{ fontSize: 11, fill: "var(--c-text-3)" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "var(--c-text-3)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} />
                 <Tooltip
-                  formatter={(value: any) => [fmt(Number(value)), "Balance"]}
+                  formatter={(value: any) => [fmt(Number(value)), tr.savings.balance]}
                   contentStyle={{ backgroundColor: "var(--c-tooltip-bg)", border: "1px solid var(--c-border)", borderRadius: "10px", fontSize: 12, padding: "8px 14px", boxShadow: "0 4px 16px rgba(10,21,25,0.06)" }}
                 />
                 <Area type="monotone" dataKey="balance" stroke="var(--c-brand)" strokeWidth={1.5} fill="url(#balGrad)" dot={false}

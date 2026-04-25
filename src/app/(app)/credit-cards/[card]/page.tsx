@@ -278,8 +278,7 @@ export default function CardDetailPage() {
     return (
       <div>
         <h1 className="text-heading text-[var(--c-text)] mb-6">{title}</h1>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <CardSkeleton />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <CardSkeleton />
           <CardSkeleton />
         </div>
@@ -296,7 +295,7 @@ export default function CardDetailPage() {
       <h1 className="text-heading text-[var(--c-text)]">{title}</h1>
 
       {/* Header info row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.creditCards.currentBalance}</p>
           <p className={`text-2xl font-semibold tabular-nums ${balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"}`}>
@@ -308,12 +307,11 @@ export default function CardDetailPage() {
           <p className={`text-2xl font-semibold tabular-nums ${available >= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
             {formatCOP(available)}
           </p>
-          <p className="text-[11px] text-[var(--c-text-3)] mt-1">{t.creditCards.limit}: {formatCOP(creditLimit)}</p>
-        </Card>
-        <Card>
-          <p className="text-[11px] font-medium text-[var(--c-text-3)] uppercase tracking-wider mb-2">{t.creditCards.billingCutoffDate}</p>
-          <p className="text-2xl font-semibold text-[var(--c-text)]">{billingCutoffDay}</p>
-          <p className="text-[11px] text-[var(--c-text-3)] mt-1">{t.creditCards.next}: {cutoffStr}</p>
+          <p className="text-[11px] text-[var(--c-text-3)] mt-1">
+            {t.creditCards.limit}: {formatCOP(creditLimit)}
+            <span className="mx-2 text-[var(--c-sep)]">·</span>
+            {t.creditCards.billingCutoffDate}: {cutoffStr}
+          </p>
         </Card>
       </div>
 

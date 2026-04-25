@@ -5,7 +5,15 @@
  * Also exports legacy named exports for backward compat.
  */
 
-function CardFace({ gradient, className = "" }: { gradient: string; className?: string }) {
+function CardFace({
+  gradient,
+  name,
+  className = "",
+}: {
+  gradient: string;
+  name?: string;
+  className?: string;
+}) {
   return (
     <div
       className={`relative w-full aspect-[1.586/1] rounded-2xl overflow-hidden shadow-[0_8px_20px_rgba(10,21,25,0.12)] ${className}`}
@@ -19,24 +27,31 @@ function CardFace({ gradient, className = "" }: { gradient: string; className?: 
             "linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.12) 100%)",
         }}
       />
+      {name && (
+        <span className="absolute bottom-3 left-4 text-white/90 text-[12px] font-semibold tracking-wide drop-shadow-sm select-none">
+          {name}
+        </span>
+      )}
     </div>
   );
 }
 
 /**
- * Universal card — pass `color` and `colorGradientEnd` from the account document.
+ * Universal card — pass `color`, `colorGradientEnd`, and optionally `name` from the account document.
  */
 export function AccountCard({
   color,
   colorGradientEnd,
+  name,
   className = "",
 }: {
   color: string;
   colorGradientEnd?: string;
+  name?: string;
   className?: string;
 }) {
   const end = colorGradientEnd || color;
-  return <CardFace className={className} gradient={`linear-gradient(135deg, ${color} 0%, ${end} 100%)`} />;
+  return <CardFace className={className} name={name} gradient={`linear-gradient(135deg, ${color} 0%, ${end} 100%)`} />;
 }
 
 /* Legacy named exports — kept so existing imports don't break */

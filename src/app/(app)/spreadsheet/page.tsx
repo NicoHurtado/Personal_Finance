@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useCallback, useReducer, useState } from "react";
 import { useT } from "@/hooks/useT";
-import { useLangStore } from "@/store/langStore";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const DEFAULT_ROWS = 40;
@@ -165,7 +164,6 @@ const STORAGE_KEY = "finance-spreadsheet";
 // ─── Component ────────────────────────────────────────────────────────────────
 export default function SpreadsheetPage() {
   const t = useT();
-  const { lang } = useLangStore();
   const [state, dispatch] = useReducer(reducer, INIT);
   const [sel, setSel] = useState<Selection>({ anchor: { r: 0, c: 0 }, focus: { r: 0, c: 0 } });
   const [editing, setEditing] = useState(false);
@@ -317,7 +315,7 @@ export default function SpreadsheetPage() {
   };
 
   const handleClear = () => {
-    if (confirm("¿Borrar toda la hoja?")) {
+    if (confirm(t.spreadsheet.confirmClear)) {
       dispatch({ type: "LOAD", state: INIT });
       localStorage.removeItem(STORAGE_KEY);
     }
@@ -372,17 +370,17 @@ export default function SpreadsheetPage() {
                 {sheetName}
               </button>
             )}
-            <span className="text-[11px] text-[var(--c-text-3)]">· {lang === "es" ? "guardado automáticamente" : "auto-saved"}</span>
+            <span className="text-[11px] text-[var(--c-text-3)]">· {t.spreadsheet.autoSaved}</span>
           </div>
           <div className="flex items-center gap-2">
             <button onClick={handleSave} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">
-              {saved ? "✓ Guardado" : (lang === "es" ? "Guardar" : "Save")}
+              {saved ? t.spreadsheet.saved : t.spreadsheet.save}
             </button>
             <button onClick={exportCSV} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-border)] text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">
               CSV
             </button>
             <button onClick={handleClear} className="text-[12px] px-3 py-1 rounded-lg border border-[var(--c-expense-bg)] text-[var(--c-expense)] hover:bg-[var(--c-expense-bg)] transition-colors">
-              {lang === "es" ? "Limpiar" : "Clear"}
+              {t.spreadsheet.clear}
             </button>
           </div>
         </div>
@@ -445,10 +443,10 @@ export default function SpreadsheetPage() {
           <div className="w-px h-5 bg-[var(--c-border)] mx-1" />
 
           <button onClick={() => { dispatch({ type: "ADD_ROW" }); }} className="text-[11px] px-2 py-1 rounded-md text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors whitespace-nowrap">
-            + {lang === "es" ? "Filas" : "Rows"}
+            + {t.spreadsheet.rows}
           </button>
           <button onClick={() => { dispatch({ type: "ADD_COL" }); }} className="text-[11px] px-2 py-1 rounded-md text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors whitespace-nowrap">
-            + {lang === "es" ? "Columnas" : "Cols"}
+            + {t.spreadsheet.cols}
           </button>
         </div>
       </div>
@@ -595,7 +593,7 @@ export default function SpreadsheetPage() {
             if (!vals.length) return "";
             const sum = vals.reduce((a, b) => a + b, 0);
             const avg = sum / vals.length;
-            return `${lang === "es" ? "Suma" : "Sum"}: ${sum.toLocaleString()}  ·  ${lang === "es" ? "Promedio" : "Avg"}: ${avg.toFixed(2)}  ·  ${lang === "es" ? "Conteo" : "Count"}: ${vals.length}`;
+            return `${t.spreadsheet.sum}: ${sum.toLocaleString()}  ·  ${t.spreadsheet.avg}: ${avg.toFixed(2)}  ·  ${t.spreadsheet.count}: ${vals.length}`;
           })()}
         </span>
         <span>
