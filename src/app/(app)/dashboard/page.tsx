@@ -66,11 +66,14 @@ interface DailyEntry {
 }
 type DailyCashFlowMap = Record<string, Record<number, DailyEntry>>;
 
+interface DailyNetPoint { _id: { year: number; month: number; day: number }; net: number }
+
 interface SummaryResponse {
   accounts: Account[];
   recentActivity: Transaction[];
   cashFlow: CashFlowMap;
   dailyCashFlow: DailyCashFlowMap;
+  allDailyNetFlow: DailyNetPoint[];
   holdings: Holding[];
   stockQuotes: StockQuote[];
   trm: number;
@@ -110,6 +113,7 @@ export default function DashboardPage() {
   const [recentActivityRaw, setRecentActivityRaw] = useState<Transaction[]>([]);
   const [serverCashFlow, setServerCashFlow] = useState<CashFlowMap>({});
   const [serverDailyCashFlow, setServerDailyCashFlow] = useState<DailyCashFlowMap>({});
+  const [allDailyNetFlow, setAllDailyNetFlow] = useState<DailyNetPoint[]>([]);
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [stockPrices, setStockPrices] = useState<StockQuote[]>([]);
   const [trm, setTrm] = useState<number>(0);
@@ -136,6 +140,7 @@ export default function DashboardPage() {
         setRecentActivityRaw(data.recentActivity);
         setServerCashFlow(data.cashFlow);
         setServerDailyCashFlow(data.dailyCashFlow || {});
+        setAllDailyNetFlow(data.allDailyNetFlow || []);
         setHoldings(data.holdings);
         setStockPrices(data.stockQuotes);
         setTrm(data.trm);
@@ -163,12 +168,11 @@ export default function DashboardPage() {
   const debitAccounts = useMemo(() => accounts.filter((a) => a.type === "debit"), [accounts]);
   const creditAccounts = useMemo(() => accounts.filter((a) => a.type === "credit_card"), [accounts]);
   const fixedIncomeAccounts = useMemo(() => accounts.filter((a) => a.type === "fixed_income"), [accounts]);
-  const brokerageAccount = useMemo(() => accounts.find((a) => a.type === "brokerage"), [accounts]);
+  const brokerageAccounts = useMemo(() => accounts.filter((a) => a.type === "brokerage"), [accounts]);
 
   const liquidityCOP = useMemo(() => {
     return debitAccounts.reduce((sum, a) => {
-      const bal = a.balance;
-      return sum + (a.currency === "USD" ? bal * trm : bal);
+      return sum + (a.currency === "USD" ? a.balance * (trm || 0) : a.balance);
     }, 0);
   }, [debitAccounts, trm]);
 
@@ -177,8 +181,10 @@ export default function DashboardPage() {
   }, [debitAccounts]);
 
   const fixedIncomeCOP = useMemo(() => {
-    return fixedIncomeAccounts.reduce((sum, a) => sum + a.balance, 0);
-  }, [fixedIncomeAccounts]);
+    return fixedIncomeAccounts.reduce((sum, a) => {
+      return sum + (a.currency === "USD" ? a.balance * (trm || 0) : a.balance);
+    }, 0);
+  }, [fixedIncomeAccounts, trm]);
 
   const fixedIncomeGrowth = useMemo(() => {
     let totalGrowth = 0;
@@ -193,7 +199,6 @@ export default function DashboardPage() {
 
   const hapiUSD = useMemo(() => {
     if (holdings.length === 0) return 0;
-    // If any quote has a real price, use live prices; otherwise use cost basis
     const hasLivePrices = stockPrices.some((q) => q.price !== null);
     return holdings.reduce((sum, inv) => {
       const quote = stockPrices.find((q) => q.ticker === inv.ticker);
@@ -205,7 +210,15 @@ export default function DashboardPage() {
   const hapiCOP = hapiUSD * (trm || 0);
   const totalDebt = creditAccounts.reduce((sum, a) => sum + a.balance, 0);
   const debtAbs = Math.abs(totalDebt);
-  const netCapital = (liquidityCOP || 0) + (fixedIncomeCOP || 0) + (hapiCOP || 0) + (totalDebt || 0);
+
+  // Dynamic: sums ALL account types so any new product is automatically included
+  const netCapital = useMemo(() => {
+    const safeTrm = trm || 0;
+    const allAccountsSum = accounts
+      .filter((a) => a.type !== "brokerage") // brokerage uses live prices via hapiCOP
+      .reduce((sum, a) => sum + (a.currency === "USD" ? a.balance * safeTrm : a.balance), 0);
+    return allAccountsSum + hapiCOP;
+  }, [accounts, trm, hapiCOP]);
 
   /* ---------- Cash Flow from server data ---------- */
 
@@ -220,6 +233,19 @@ export default function DashboardPage() {
     availableMonths.forEach((m) => ys.add(Number(m.split("-")[0])));
     return Array.from(ys).sort((a, b) => b - a);
   }, [availableMonths]);
+
+  // Build a sorted array of cumulative capital by date from all accounts (forward approach)
+  const forwardCapitalByDate = useMemo(() => {
+    if (allDailyNetFlow.length === 0) return { byDate: new Map<string, number>(), txBasedCurrent: 0 };
+    let running = 0;
+    const byDate = new Map<string, number>();
+    for (const point of allDailyNetFlow) {
+      running += point.net;
+      const key = `${point._id.year}-${String(point._id.month).padStart(2, "0")}-${String(point._id.day).padStart(2, "0")}`;
+      byDate.set(key, running);
+    }
+    return { byDate, txBasedCurrent: running };
+  }, [allDailyNetFlow]);
 
   const cashFlow = useMemo(() => {
     const usdAccountIds = new Set<string>();
@@ -238,17 +264,6 @@ export default function DashboardPage() {
       return total;
     };
 
-    const getMonthIncome = (ym: string): number => {
-      const monthData = serverCashFlow[ym];
-      if (!monthData) return 0;
-      let total = 0;
-      for (const [accId, vals] of Object.entries(monthData)) {
-        const multiplier = usdAccountIds.has(accId) ? safeTrm : 1;
-        total += vals.income * multiplier;
-      }
-      return total;
-    };
-
     const getDayExpenses = (ym: string, day: number): number => {
       const dayData = serverDailyCashFlow[ym]?.[day];
       if (!dayData) return 0;
@@ -260,37 +275,33 @@ export default function DashboardPage() {
       return total;
     };
 
-    const getDayIncome = (ym: string, day: number): number => {
-      const dayData = serverDailyCashFlow[ym]?.[day];
-      if (!dayData) return 0;
-      let total = 0;
-      for (const [accId, vals] of Object.entries(dayData.accounts)) {
-        const multiplier = usdAccountIds.has(accId) ? safeTrm : 1;
-        total += vals.income * multiplier;
-      }
-      return total;
-    };
-
     const getDayTransactions = (ym: string, day: number): DailyTx[] => {
       return serverDailyCashFlow[ym]?.[day]?.transactions || [];
     };
 
-    const currentCapital = netCapital || 0;
+    // Forward capital: transaction-based running total + calibration offset so today matches stat cards
+    const { byDate, txBasedCurrent } = forwardCapitalByDate;
+    const realCurrentCapital = netCapital || 0;
+    const calibrationOffset = realCurrentCapital - txBasedCurrent;
 
-    const getMonthNetFlow = (ym: string): number => {
-      return getMonthIncome(ym) - getMonthExpenses(ym);
+    // Get the transaction-based capital at end of a given day (last entry on or before that date)
+    const getCapitalAtDate = (dateStr: string): number => {
+      // Walk backwards from dateStr to find last known value
+      const [y, m, d] = dateStr.split("-").map(Number);
+      // Try the exact date and earlier dates within a reasonable range
+      for (let delta = 0; delta <= 365; delta++) {
+        const dt = new Date(y, m - 1, d - delta);
+        if (dt.getFullYear() < 2020) break;
+        const key = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, "0")}-${String(dt.getDate()).padStart(2, "0")}`;
+        if (byDate.has(key)) return byDate.get(key)! + calibrationOffset;
+      }
+      return calibrationOffset;
     };
 
-    const allMonths = Object.keys(serverCashFlow).sort();
-
-    const getCapitalAtEndOfMonth = (upToYm: string): number => {
-      let futureFlow = 0;
-      for (let i = allMonths.length - 1; i >= 0; i--) {
-        const ym = allMonths[i];
-        if (ym <= upToYm) break;
-        futureFlow += getMonthNetFlow(ym);
-      }
-      return currentCapital - futureFlow;
+    const getCapitalAtEndOfMonth = (ym: string): number => {
+      const [y, m] = ym.split("-").map(Number);
+      const lastDay = new Date(y, m, 0).getDate();
+      return getCapitalAtDate(`${ym}-${String(lastDay).padStart(2, "0")}`);
     };
 
     let data: { label: string; capital: number; expense: number; expenseBar: number; transactions?: DailyTx[] }[] = [];
@@ -298,11 +309,6 @@ export default function DashboardPage() {
 
     if (chartView === "month") {
       const [y, m] = selectedMonth.split("-").map(Number);
-      const prevYm = m === 1
-        ? `${y - 1}-12`
-        : `${y}-${String(m - 1).padStart(2, "0")}`;
-      const baseCapital = getCapitalAtEndOfMonth(prevYm);
-
       const now = new Date();
       const daysInMonth = new Date(y, m, 0).getDate();
       const lastDay = (now.getFullYear() === y && now.getMonth() === m - 1)
@@ -310,15 +316,14 @@ export default function DashboardPage() {
         : daysInMonth;
 
       let cumExp = 0;
-      let cumNetFlow = 0;
       for (let day = 1; day <= lastDay; day++) {
         const dayExp = getDayExpenses(selectedMonth, day);
-        const dayInc = getDayIncome(selectedMonth, day);
         cumExp += dayExp;
-        cumNetFlow += (dayInc - dayExp);
+        const dateStr = `${selectedMonth}-${String(day).padStart(2, "0")}`;
+        const capital = getCapitalAtDate(dateStr);
         data.push({
           label: String(day),
-          capital: baseCapital + cumNetFlow,
+          capital,
           expense: cumExp,
           expenseBar: dayExp,
           transactions: getDayTransactions(selectedMonth, day),
@@ -347,7 +352,7 @@ export default function DashboardPage() {
     }
 
     return { data, selectedPeriodExpense };
-  }, [serverCashFlow, serverDailyCashFlow, accounts, trm, netCapital, chartView, selectedMonth, selectedYear]);
+  }, [serverCashFlow, serverDailyCashFlow, forwardCapitalByDate, accounts, trm, netCapital, chartView, selectedMonth, selectedYear]);
 
   /* ---------- Wallet cards ---------- */
 
@@ -701,7 +706,7 @@ function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any)
   if (!row) return null;
 
   const txs: DailyTx[] = row.transactions || [];
-  const expenses = txs.filter((tx) => tx.type === "Expense");
+  const expenses = txs.filter((tx) => tx.type === "Expense" || tx.type === "Deposit" || tx.type === "Withdrawal");
 
   if (chartView === "month") {
     return (
@@ -716,7 +721,9 @@ function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any)
             {expenses.map((tx: DailyTx, i: number) => (
               <div key={i} className="flex items-center justify-between gap-3">
                 <span className="text-[11px] text-[var(--c-text-3)] truncate">{tx.description}</span>
-                <span className="text-[11px] font-medium text-[var(--c-expense)] tabular-nums whitespace-nowrap">{formatCOP(tx.amount)}</span>
+                <span className={`text-[11px] font-medium tabular-nums whitespace-nowrap ${tx.amount >= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
+                  {tx.amount > 0 ? "+" : ""}{formatCOP(tx.amount)}
+                </span>
               </div>
             ))}
           </div>

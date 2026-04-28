@@ -24,13 +24,22 @@ export async function GET() {
     await connectDB();
     const userId = new mongoose.Types.ObjectId(String(user._id));
 
-    // All DB queries + external data in parallel
-    const [accounts, balanceAgg, recentActivity, cashFlowAgg, dailyCashFlowAgg, holdings, trmResult, allTxnsForFixed] =
-      await Promise.all([
-        Account.find({ userId: user._id, active: true })
-          .sort({ sortOrder: 1 })
-          .lean(),
+    // Fetch accounts first so we can filter cashFlow to debit+credit_card only
+    const accounts = await Account.find({ userId: user._id, active: true })
+      .sort({ sortOrder: 1 })
+      .lean();
 
+    const cashFlowAccountIds = accounts
+      .filter((a: any) => a.type === "debit" || a.type === "credit_card")
+      .map((a: any) => a._id);
+
+    // All remaining DB queries + external data in parallel
+    const fixedIncomeAccountIds = accounts
+      .filter((a: any) => a.type === "fixed_income")
+      .map((a: any) => a._id);
+
+    const [balanceAgg, recentActivity, cashFlowAgg, dailyCashFlowAgg, dailyFixedFlowAgg, allDailyNetFlow, holdings, trmResult, allTxnsForFixed] =
+      await Promise.all([
         TransactionV2.aggregate([
           { $match: { userId } },
           {
@@ -49,7 +58,7 @@ export async function GET() {
           .lean(),
 
         TransactionV2.aggregate([
-          { $match: { userId, "metadata.isCardPayment": { $ne: true } } },
+          { $match: { userId, "metadata.isCardPayment": { $ne: true }, accountId: { $in: cashFlowAccountIds } } },
           {
             $group: {
               _id: {
@@ -65,7 +74,7 @@ export async function GET() {
         ]),
 
         TransactionV2.aggregate([
-          { $match: { userId, "metadata.isCardPayment": { $ne: true } } },
+          { $match: { userId, "metadata.isCardPayment": { $ne: true }, accountId: { $in: cashFlowAccountIds } } },
           {
             $group: {
               _id: {
@@ -85,6 +94,43 @@ export async function GET() {
               },
             },
           },
+        ]),
+
+        // Fixed income accounts — withdrawals and deposits for tooltip display
+        fixedIncomeAccountIds.length > 0 ? TransactionV2.aggregate([
+          { $match: { userId, accountId: { $in: fixedIncomeAccountIds }, "metadata.isCardPayment": { $ne: true } } },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$date" },
+                month: { $month: "$date" },
+                day: { $dayOfMonth: "$date" },
+              },
+              transactions: {
+                $push: {
+                  description: "$description",
+                  amount: "$amount",
+                  type: "$type",
+                },
+              },
+            },
+          },
+        ]) : Promise.resolve([]),
+
+        // All accounts, all transactions — used for forward capital line reconstruction
+        TransactionV2.aggregate([
+          { $match: { userId } },
+          {
+            $group: {
+              _id: {
+                year: { $year: "$date" },
+                month: { $month: "$date" },
+                day: { $dayOfMonth: "$date" },
+              },
+              net: { $sum: "$amount" },
+            },
+          },
+          { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
         ]),
 
         Holding.find({ userId: user._id }).lean(),
@@ -139,7 +185,7 @@ export async function GET() {
 
       if (c._id.type === "Expense") {
         cashFlow[key][accId].expenses += Math.abs(c.total);
-      } else {
+      } else if (c._id.type === "Income") {
         cashFlow[key][accId].income += c.total;
       }
     }
@@ -159,9 +205,18 @@ export async function GET() {
 
       if (d._id.type === "Expense") {
         dailyCashFlow[key][day].accounts[accId].expenses += Math.abs(d.total);
-      } else {
+      } else if (d._id.type === "Income") {
         dailyCashFlow[key][day].accounts[accId].income += d.total;
       }
+      dailyCashFlow[key][day].transactions.push(...(d.transactions || []));
+    }
+
+    // Merge fixed income transactions into the tooltip (no effect on bars/totals)
+    for (const d of dailyFixedFlowAgg) {
+      const key = `${d._id.year}-${String(d._id.month).padStart(2, "0")}`;
+      const day = d._id.day;
+      if (!dailyCashFlow[key]) dailyCashFlow[key] = {};
+      if (!dailyCashFlow[key][day]) dailyCashFlow[key][day] = { accounts: {}, transactions: [] };
       dailyCashFlow[key][day].transactions.push(...(d.transactions || []));
     }
 
@@ -170,6 +225,7 @@ export async function GET() {
       recentActivity,
       cashFlow,
       dailyCashFlow,
+      allDailyNetFlow,
       holdings,
       stockQuotes,
       trm: trmResult.rate,

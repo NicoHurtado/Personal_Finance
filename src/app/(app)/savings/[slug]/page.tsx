@@ -45,6 +45,7 @@ interface Transaction {
   amount: number;
   type: "Income" | "Expense";
   categoryId?: string;
+  metadata?: { isCardPayment?: boolean };
 }
 
 interface FormData {
@@ -53,6 +54,7 @@ interface FormData {
   amount: string;
   type: "Income" | "Expense";
   categoryId: string;
+  isCardPayment: boolean;
 }
 
 interface FormErrors {
@@ -61,7 +63,7 @@ interface FormErrors {
   amount?: string;
 }
 
-const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income", categoryId: "" };
+const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income", categoryId: "", isCardPayment: false };
 
 function validateForm(form: FormData, msgs: { dateRequired: string; descRequired: string; amountRequired: string; amountPositive: string }): FormErrors {
   const errors: FormErrors = {};
@@ -291,7 +293,7 @@ export default function DebitAccountPage() {
 
   const startEdit = (t: Transaction) => {
     setEditingId(t._id);
-    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type, categoryId: t.categoryId || "" });
+    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type, categoryId: t.categoryId || "", isCardPayment: t.metadata?.isCardPayment ?? false });
     setEditErrors({});
   };
 
@@ -304,7 +306,7 @@ export default function DebitAccountPage() {
       await fetch(`/api/v2/transactions/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type, categoryId: editForm.categoryId || null }),
+        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type, categoryId: editForm.categoryId || null, metadata: { isCardPayment: editForm.isCardPayment } }),
       });
       setEditingId(null);
       setEditErrors({});
@@ -455,6 +457,15 @@ export default function DebitAccountPage() {
                           <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
                         ))}
                       </select>
+                      <label className="flex items-center gap-1.5 mt-1.5 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={editForm.isCardPayment}
+                          onChange={(e) => setEditForm({ ...editForm, isCardPayment: e.target.checked })}
+                          className="w-3 h-3 rounded accent-[var(--c-brand)]"
+                        />
+                        <span className="text-[10px] text-[var(--c-text-3)]">{tr.savings.doNotCountAsExpense}</span>
+                      </label>
                     </td>
                     <td className="px-5 md:px-6 py-3 text-right">
                       <div className="flex gap-1.5 justify-end">
