@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useT } from "@/hooks/useT";
 import { useLangStore } from "@/store/langStore";
 import { useThemeStore } from "@/store/themeStore";
+import AddAccountModal from "@/components/AddAccountModal";
 
 type NavItem = {
   href: string;
@@ -40,6 +41,7 @@ export default function Sidebar() {
   const [userName, setUserName] = useState("");
   const [userInitials, setUserInitials] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
 
   const generalItems: NavItem[] = [
     {
@@ -193,6 +195,19 @@ export default function Sidebar() {
             </svg>
             <span className="truncate">{t.nav.spreadsheet}</span>
           </Link>
+        </div>
+
+        {/* Add account button */}
+        <div className="px-3 pb-3">
+          <button
+            onClick={() => setAddAccountOpen(true)}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-150 border border-dashed border-sidebar-border hover:border-[var(--c-brand)]/40"
+          >
+            <svg className="w-[17px] h-[17px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span className="truncate">{t.addAccount.title}</span>
+          </button>
         </div>
 
         {/* Bottom user + logout */}
@@ -355,6 +370,12 @@ export default function Sidebar() {
           </div>
         </div>
       )}
+
+      {/* Add Account Modal */}
+      <AddAccountModal
+        open={addAccountOpen}
+        onClose={() => setAddAccountOpen(false)}
+      />
     </>
   );
 }

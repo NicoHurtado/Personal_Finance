@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
-import { getCurrentUser } from "@/lib/auth";
 import { Category } from "@/models/Category";
 import { apiError } from "@/lib/api-utils";
 
 export async function GET() {
   try {
-    const user = getCurrentUser();
     await connectDB();
-    const categories = await Category.find({ userId: user._id })
-      .sort({ name: 1 })
-      .lean();
+    const categories = await Category.find({}).sort({ name: 1 }).lean();
     return NextResponse.json(categories);
   } catch (error) {
     return apiError(error);
@@ -19,9 +15,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const user = getCurrentUser();
     await connectDB();
-    const { name, color } = await request.json();
+    const { name, color, key } = await request.json();
 
     if (!name || !color) {
       return NextResponse.json(
@@ -30,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const category = await Category.create({ name, color, userId: user._id });
+    const category = await Category.create({ name, color, ...(key ? { key } : {}) });
     return NextResponse.json(category, { status: 201 });
   } catch (error) {
     return apiError(error);

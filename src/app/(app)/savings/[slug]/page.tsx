@@ -396,20 +396,20 @@ export default function DebitAccountPage() {
             { label: tr.savings.expense, value: "Expense" },
           ]}
           filterLabel={tr.savings.filterLabel}
+          endAdornment={
+            <select
+              value={catFilter}
+              onChange={(e) => setCatFilter(e.target.value)}
+              className="px-3 py-2.5 sm:py-2 text-base sm:text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] touch-manipulation w-full"
+            >
+              <option value="">{tr.savings.allCategories}</option>
+              <option value="__uncategorized">{tr.savings.uncategorized}</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
+              ))}
+            </select>
+          }
         />
-        <div className="flex items-center gap-2 mb-4">
-          <select
-            value={catFilter}
-            onChange={(e) => setCatFilter(e.target.value)}
-            className="px-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
-          >
-            <option value="">{tr.savings.allCategories}</option>
-            <option value="__uncategorized">{tr.savings.uncategorized}</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
-            ))}
-          </select>
-        </div>
 
         <div className="overflow-x-auto -mx-5 md:-mx-6">
           <table className="w-full text-sm">

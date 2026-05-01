@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useT } from "@/hooks/useT";
 
 export default function LoginPage() {
@@ -117,6 +118,19 @@ export default function LoginPage() {
             </button>
           </div>
         </form>
+
+        {/* Register link */}
+        <div className="mt-5 text-center">
+          <p className="text-[12px] text-[var(--c-text-3)]">
+            {t.login.orCreate}{" "}
+            <Link
+              href="/register"
+              className="text-[var(--c-brand)] hover:underline font-medium"
+            >
+              {t.login.createProfile}
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

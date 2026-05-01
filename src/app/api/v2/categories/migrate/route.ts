@@ -1,43 +1,71 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import { getCurrentUser } from "@/lib/auth";
 import { Category } from "@/models/Category";
-import { User } from "@/models/User";
+import { TransactionV2 } from "@/models/TransactionV2";
+import { GLOBAL_CATEGORY_SEEDS } from "@/lib/category-seeds";
 import { apiError } from "@/lib/api-utils";
 
-const UNIFIED_CATEGORIES = [
-  { name: "Pago", key: "pago", color: "#00D47E" },
-  { name: "Retiro", key: "retiro", color: "#4A9B8E" },
-  { name: "Salud", key: "salud", color: "#E85D75" },
-  { name: "Comida", key: "comida", color: "#F59E0B" },
-  { name: "Tecnologia", key: "tecnologia", color: "#4FB7C2" },
-  { name: "Servicio", key: "servicio", color: "#7A8B90" },
-  { name: "Entretenimiento", key: "entretenimiento", color: "#8B5CF6" },
-  { name: "Antojo", key: "antojo", color: "#F97316" },
-  { name: "Transporte", key: "transporte", color: "#3B82F6" },
-];
-
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/v2/categories/migrate
+ * Replaces per-user / duplicated categories with a single global set (no userId).
+ * Remaps transactions.categoryId by stable category key so assignments stay correct.
+ */
+export async function POST() {
   try {
-    const user = getCurrentUser();
+    getCurrentUser();
     await connectDB();
 
-    const url = new URL(request.url);
-    const all = url.searchParams.get("all") === "true";
-
-    if (all) {
-      const users = await User.find().select("_id").lean();
-      const userIds = users.map((u) => u._id);
-      await Category.deleteMany({ userId: { $in: userIds } });
-      await Category.insertMany(
-        userIds.flatMap((uid) => UNIFIED_CATEGORIES.map((c) => ({ ...c, userId: uid })))
-      );
-      return NextResponse.json({ message: "Categories migrated for all users", users: users.length, count: UNIFIED_CATEGORIES.length });
+    const oldCats = await Category.find({}).lean();
+    const idToKey = new Map<string, string>();
+    for (const c of oldCats) {
+      if (c.key) idToKey.set(String(c._id), c.key);
     }
 
-    await Category.deleteMany({ userId: user._id });
-    await Category.insertMany(UNIFIED_CATEGORIES.map((c) => ({ ...c, userId: user._id })));
-    return NextResponse.json({ message: "Categories migrated", count: UNIFIED_CATEGORIES.length });
+    await Category.deleteMany({});
+    const inserted = await Category.insertMany([...GLOBAL_CATEGORY_SEEDS]);
+    const keyToNewId = new Map<string, string>(
+      inserted.map((doc) => [doc.key as string, String(doc._id)])
+    );
+
+    const txs = await TransactionV2.find({ categoryId: { $ne: null } })
+      .select("_id categoryId")
+      .lean();
+
+    const ops = [];
+    for (const t of txs) {
+      const catId = t.categoryId as string;
+      const key = idToKey.get(catId);
+      const newId = key ? keyToNewId.get(key) : undefined;
+      if (newId && newId !== catId) {
+        ops.push({
+          updateOne: {
+            filter: { _id: t._id },
+            update: { $set: { categoryId: newId } },
+          },
+        });
+      } else if (!newId) {
+        ops.push({
+          updateOne: {
+            filter: { _id: t._id },
+            update: { $set: { categoryId: null } },
+          },
+        });
+      }
+    }
+
+    let bulkResult = null;
+    if (ops.length > 0) {
+      bulkResult = await TransactionV2.bulkWrite(ops, { ordered: false });
+    }
+
+    return NextResponse.json({
+      message: "Categories normalized to global set",
+      categoriesCount: GLOBAL_CATEGORY_SEEDS.length,
+      previousCategoryDocs: oldCats.length,
+      transactionsUpdated: bulkResult?.modifiedCount ?? 0,
+      transactionsCleared: ops.filter((o) => o.updateOne.update.$set.categoryId === null).length,
+    });
   } catch (error) {
     return apiError(error);
   }

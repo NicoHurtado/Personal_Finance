@@ -36,11 +36,11 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
 
   return createPortal(
     <div
-      className="fixed inset-0 bg-black/60 z-[9999] flex items-end sm:items-center justify-center"
+      className="fixed inset-0 bg-black/60 z-[9999] flex items-end sm:items-center justify-center touch-manipulation"
       onClick={onClose}
     >
       <div
-        className="
+          className="
           bg-card w-full sm:max-w-md
           rounded-t-2xl sm:rounded-xl
           border border-[var(--c-border)]
@@ -48,6 +48,7 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
           flex flex-col
           shadow-lg
           pb-[env(safe-area-inset-bottom)]
+          touch-manipulation
         "
         onClick={(e) => e.stopPropagation()}
       >
@@ -60,8 +61,9 @@ export default function Modal({ open, onClose, title, children }: ModalProps) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--c-border)] shrink-0">
           <h3 className="text-[15px] font-medium text-[var(--c-text)]">{title}</h3>
           <button
+            type="button"
             onClick={onClose}
-            className="text-[var(--c-text-3)] hover:text-[var(--c-text)] transition-colors p-1 -mr-1"
+            className="text-[var(--c-text-3)] hover:text-[var(--c-text)] active:text-[var(--c-text)] transition-colors p-2 -mr-1 -mt-1 rounded-lg touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center sm:min-h-0 sm:min-w-0 sm:p-1"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

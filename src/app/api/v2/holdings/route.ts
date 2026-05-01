@@ -4,11 +4,15 @@ import { getCurrentUser } from "@/lib/auth";
 import { Holding } from "@/models/Holding";
 import { apiError } from "@/lib/api-utils";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const user = getCurrentUser();
     await connectDB();
-    const holdings = await Holding.find({ userId: user._id })
+    const { searchParams } = new URL(request.url);
+    const accountId = searchParams.get("accountId");
+    const query: Record<string, unknown> = { userId: user._id };
+    if (accountId) query.accountId = accountId;
+    const holdings = await Holding.find(query)
       .sort({ ticker: 1 })
       .lean();
     return NextResponse.json(holdings);

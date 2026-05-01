@@ -93,9 +93,22 @@ function ymKey(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function monthLabel(ym: string): string {
+function monthLabel(ym: string, locale: string): string {
   const [y, m] = ym.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  return new Date(y, m - 1, 1).toLocaleDateString(locale, { month: "long", year: "numeric" });
+}
+
+function ymCompare(a: string, b: string): number {
+  const [ay, am] = a.split("-").map(Number);
+  const [by, bm] = b.split("-").map(Number);
+  if (ay !== by) return ay - by;
+  return am - bm;
+}
+
+function addCalendarMonth(ym: string, delta: number): string {
+  const [y, m] = ym.split("-").map(Number);
+  const d = new Date(y, m - 1 + delta, 1);
+  return ymKey(d);
 }
 
 /* ---------- Component ---------- */
@@ -103,10 +116,13 @@ function monthLabel(ym: string): string {
 export default function DashboardPage() {
   const t = useT();
   const { lang } = useLangStore();
+  const monthLocale = lang === "es" ? "es-CO" : "en-US";
   const [loading, setLoading] = useState(true);
-  const [chartView, setChartView] = useState<"month" | "year">("month");
+  /** Year first until the calendar month has cash-flow data (see init effect after summary load). */
+  const [chartView, setChartView] = useState<"month" | "year">("year");
   const [selectedMonth, setSelectedMonth] = useState<string>(ymKey(new Date()));
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [chartPrefsReady, setChartPrefsReady] = useState(false);
 
   const [userName, setUserName] = useState<string>("");
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -148,6 +164,19 @@ export default function DashboardPage() {
       .catch((err) => console.error("Dashboard load error:", err))
       .finally(() => setLoading(false));
   }, []);
+
+  /* ---------- Cash-flow chart: default month/year from server data ---------- */
+
+  useEffect(() => {
+    if (loading || chartPrefsReady) return;
+    const now = new Date();
+    const currentYm = ymKey(now);
+    const hasCurrentMonthData = Boolean(serverCashFlow[currentYm]);
+    setSelectedMonth(currentYm);
+    setSelectedYear(now.getFullYear());
+    setChartView(hasCurrentMonthData ? "month" : "year");
+    setChartPrefsReady(true);
+  }, [loading, serverCashFlow, chartPrefsReady]);
 
   /* ---------- Account lookups ---------- */
 
@@ -223,10 +252,31 @@ export default function DashboardPage() {
   /* ---------- Cash Flow from server data ---------- */
 
   const availableMonths = useMemo(() => {
-    const months = Object.keys(serverCashFlow).sort();
-    if (months.length === 0) return [ymKey(new Date())];
-    return months.reverse();
+    const dataMonths = Object.keys(serverCashFlow);
+    const current = ymKey(new Date());
+    if (dataMonths.length === 0) return [current];
+
+    const sortedAsc = [...dataMonths].sort(ymCompare);
+    const earliest = sortedAsc[0];
+    const filled: string[] = [];
+    let cursor = earliest;
+    let guard = 0;
+    while (ymCompare(cursor, current) <= 0 && guard++ < 600) {
+      filled.push(cursor);
+      cursor = addCalendarMonth(cursor, 1);
+    }
+    if (filled.length === 0) {
+      return Array.from(new Set([...dataMonths, current])).sort(ymCompare).reverse();
+    }
+    return filled.reverse();
   }, [serverCashFlow]);
+
+  useEffect(() => {
+    if (availableMonths.length === 0) return;
+    if (availableMonths.includes(selectedMonth)) return;
+    const current = ymKey(new Date());
+    setSelectedMonth(availableMonths.includes(current) ? current : availableMonths[0]);
+  }, [availableMonths, selectedMonth]);
 
   const availableYears = useMemo(() => {
     const ys = new Set<number>();
@@ -536,7 +586,7 @@ export default function DashboardPage() {
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
                   </button>
                   <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
-                    {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m)}</option>))}
+                    {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m, monthLocale)}</option>))}
                   </select>
                   <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) setSelectedMonth(availableMonths[idx - 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) <= 0} aria-label="Next month">
                     <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
@@ -609,7 +659,7 @@ export default function DashboardPage() {
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.expenses}</p>
               <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
-              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
+              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth, monthLocale) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
             </div>
           </Card>
         </div>

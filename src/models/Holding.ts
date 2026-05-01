@@ -7,6 +7,7 @@ export interface IHolding extends Document {
   companyName: string;
   shares: number;
   costBasisPerShare: number;
+  purchaseDate?: Date;
   createdAt: Date;
 }
 
@@ -17,6 +18,7 @@ const HoldingSchema = new Schema<IHolding>({
   companyName: { type: String, required: true },
   shares: { type: Number, required: true },
   costBasisPerShare: { type: Number, required: true },
+  purchaseDate: { type: Date },
   createdAt: { type: Date, default: Date.now },
 });
 

@@ -6,6 +6,7 @@ import { Account, type AccountType } from "@/models/Account";
 import { TransactionV2 } from "@/models/TransactionV2";
 import { Holding } from "@/models/Holding";
 import { Category } from "@/models/Category";
+import { GLOBAL_CATEGORY_SEEDS } from "@/lib/category-seeds";
 import { parseCOPAmount } from "@/lib/format";
 import fs from "fs";
 import path from "path";
@@ -112,18 +113,16 @@ const ACCOUNT_SEEDS: AccountSeed[] = [
     colorGradientEnd: "#014750",
     sortOrder: 6,
   },
-];
-
-const CATEGORY_SEEDS = [
-  { name: "Pago", key: "pago", color: "#00D47E" },
-  { name: "Retiro", key: "retiro", color: "#4A9B8E" },
-  { name: "Salud", key: "salud", color: "#E85D75" },
-  { name: "Comida", key: "comida", color: "#F59E0B" },
-  { name: "Tecnologia", key: "tecnologia", color: "#4FB7C2" },
-  { name: "Servicio", key: "servicio", color: "#7A8B90" },
-  { name: "Entretenimiento", key: "entretenimiento", color: "#8B5CF6" },
-  { name: "Antojo", key: "antojo", color: "#F97316" },
-  { name: "Transporte", key: "transporte", color: "#3B82F6" },
+  {
+    slug: "ibkr",
+    name: "IBKR Interactive Brokers",
+    type: "brokerage",
+    currency: "USD",
+    icon: "chart-bar",
+    color: "#C8102E",
+    colorGradientEnd: "#8B0000",
+    sortOrder: 7,
+  },
 ];
 
 /**
@@ -199,11 +198,11 @@ export async function POST(request: Request) {
       accountMap[seed.slug] = String(account._id);
     }
 
-    // 3. Seed categories
-    const existingCats = await Category.countDocuments({ userId });
+    // 3. Seed global categories (no userId — shared across all users)
+    const existingCats = await Category.countDocuments({});
     if (existingCats === 0) {
-      await Category.insertMany(CATEGORY_SEEDS.map((c) => ({ ...c, userId })));
-      results.categories = `Seeded ${CATEGORY_SEEDS.length}`;
+      await Category.insertMany([...GLOBAL_CATEGORY_SEEDS]);
+      results.categories = `Seeded ${GLOBAL_CATEGORY_SEEDS.length}`;
     } else {
       results.categories = `Skipped (${existingCats} exist)`;
     }

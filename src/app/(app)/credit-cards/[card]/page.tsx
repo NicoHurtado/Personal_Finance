@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import Card from "@/components/Card";
 import Modal from "@/components/Modal";
@@ -82,6 +82,7 @@ export default function CardDetailPage() {
 
   const [addForm, setAddForm] = useState({ date: "", description: "", amount: "", type: "Expense" as "Expense" | "Payment", categoryId: "" });
   const [addErrors, setAddErrors] = useState<Record<string, string>>({});
+  const lastTouchOpenAtRef = useRef<number | null>(null);
 
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
@@ -163,6 +164,26 @@ export default function CardDetailPage() {
   }, [accountSlug, fetchAccountAndCategories, fetchAllTxs]);
 
   const refresh = () => { fetchAllTxs(); };
+
+  const primeAddModal = useCallback(() => {
+    setAddErrors({});
+    setAddForm({ date: "", description: "", amount: "", type: "Expense", categoryId: "" });
+    setAddOpen(true);
+  }, []);
+
+  const openAddModalFromTouch = useCallback(() => {
+    lastTouchOpenAtRef.current = typeof performance !== "undefined" ? performance.now() : Date.now();
+    primeAddModal();
+  }, [primeAddModal]);
+
+  const openAddModalFromClick = useCallback(() => {
+    const now = typeof performance !== "undefined" ? performance.now() : Date.now();
+    if (lastTouchOpenAtRef.current != null && now - lastTouchOpenAtRef.current < 650) {
+      lastTouchOpenAtRef.current = null;
+      return;
+    }
+    primeAddModal();
+  }, [primeAddModal]);
 
   const handleCategoryChange = async (txId: string, catId: string) => {
     try {
@@ -294,8 +315,11 @@ export default function CardDetailPage() {
   const inputCls = "border border-[var(--c-border)] rounded-lg px-3 py-2 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
   const inputSmCls = "border border-[var(--c-border)] rounded-lg px-2 py-1 text-sm text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] bg-card";
 
+  const categorySelectCls =
+    "w-full px-3 py-2.5 sm:py-2 text-base sm:text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)] touch-manipulation";
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-5 md:space-y-8 pb-1">
       <h1 className="text-heading text-[var(--c-text)]">{title}</h1>
 
       {/* Header info row */}
@@ -320,12 +344,18 @@ export default function CardDetailPage() {
       </div>
 
       {/* Transactions */}
-      <Card>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-5 gap-2">
+      <Card className="overflow-hidden">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-1 sm:mb-5 relative z-20">
           <h2 className="text-[15px] font-medium text-[var(--c-text)]">{t.creditCards.transactions}</h2>
           <button
-            onClick={() => setAddOpen(true)}
-            className="px-4 py-2 text-sm font-medium bg-[var(--c-brand)] text-white rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors"
+            type="button"
+            onPointerDown={(e) => {
+              if (e.pointerType === "touch" || e.pointerType === "pen") {
+                openAddModalFromTouch();
+              }
+            }}
+            onClick={openAddModalFromClick}
+            className="w-full sm:w-auto min-h-[48px] sm:min-h-0 px-4 py-3 sm:py-2 text-sm font-medium bg-[var(--c-brand)] text-white rounded-xl sm:rounded-lg hover:bg-[var(--c-brand-hov)] active:bg-[var(--c-brand-hov)] transition-colors touch-manipulation shadow-[0_1px_2px_rgba(10,21,25,0.06)] cursor-pointer max-lg:[-webkit-tap-highlight-color:transparent] select-none"
           >
             {t.creditCards.addTransaction}
           </button>
@@ -342,20 +372,18 @@ export default function CardDetailPage() {
             { label: t.creditCards.payment, value: "Payment" },
           ]}
           filterLabel={t.creditCards.allTypes}
+          endAdornment={
+            <select value={catFilter} onChange={(e) => setCatFilter(e.target.value)} className={categorySelectCls}>
+              <option value="">{t.creditCards.allCategories}</option>
+              <option value="__uncategorized">{t.creditCards.uncategorized}</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.key ? (catTranslations[c.key] ?? c.name) : c.name}
+                </option>
+              ))}
+            </select>
+          }
         />
-        <div className="flex items-center gap-2 mb-4">
-          <select
-            value={catFilter}
-            onChange={(e) => setCatFilter(e.target.value)}
-            className="px-3 py-2 text-sm text-[var(--c-text)] bg-card border border-[var(--c-border)] rounded-lg focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
-          >
-            <option value="">{t.creditCards.allCategories}</option>
-            <option value="__uncategorized">{t.creditCards.uncategorized}</option>
-            {categories.map((c) => (
-              <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
-            ))}
-          </select>
-        </div>
 
         <div className="overflow-x-auto -mx-5 md:-mx-6">
           <table className="w-full text-sm">
@@ -396,8 +424,8 @@ export default function CardDetailPage() {
                       <td className="px-3 py-3" />
                       <td className="px-5 md:px-6 py-3 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[var(--c-brand)] text-white rounded-lg hover:bg-[var(--c-brand-hov)]">{t.common.save}</button>
-                          <button onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)]">{t.common.cancel}</button>
+                          <button type="button" onClick={() => saveEdit(tx._id)} className="px-2.5 py-1 text-xs bg-[var(--c-brand)] text-white rounded-lg hover:bg-[var(--c-brand-hov)] active:bg-[var(--c-brand-hov)] touch-manipulation">{t.common.save}</button>
+                          <button type="button" onClick={() => setEditingId(null)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] touch-manipulation">{t.common.cancel}</button>
                         </div>
                       </td>
                     </>
@@ -429,8 +457,8 @@ export default function CardDetailPage() {
                       </td>
                       <td className="px-5 md:px-6 py-3.5 text-right">
                         <div className="flex gap-1.5 justify-end">
-                          <button onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">{t.common.edit}</button>
-                          <button onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[var(--c-expense)] border border-[var(--c-expense-bg)] rounded-lg hover:bg-[var(--c-expense-bg)] transition-colors">{t.common.delete}</button>
+                          <button type="button" onClick={() => startEdit(tx)} className="px-2.5 py-1 text-xs border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors touch-manipulation">{t.common.edit}</button>
+                          <button type="button" onClick={() => setDeleteTarget(tx)} className="px-2.5 py-1 text-xs text-[var(--c-expense)] border border-[var(--c-expense-bg)] rounded-lg hover:bg-[var(--c-expense-bg)] transition-colors touch-manipulation">{t.common.delete}</button>
                         </div>
                       </td>
                     </>
@@ -493,25 +521,25 @@ export default function CardDetailPage() {
           <div>
             <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.date}</label>
             <input type="date" value={addForm.date} onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
-              className={`w-full ${inputCls}`} />
+              className={`w-full min-h-[48px] sm:min-h-0 box-border ${inputCls}`} />
             {addErrors.date && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.date}</p>}
           </div>
           <div>
             <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.description}</label>
             <input type="text" value={addForm.description} onChange={(e) => setAddForm({ ...addForm, description: e.target.value })}
-              className={`w-full ${inputCls}`} />
+              className={`w-full min-h-[48px] sm:min-h-0 box-border ${inputCls}`} />
             {addErrors.description && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.description}</p>}
           </div>
           <div>
             <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.amount}</label>
             <input type="number" min="0.01" step="0.01" value={addForm.amount} onChange={(e) => setAddForm({ ...addForm, amount: e.target.value })}
-              className={`w-full ${inputCls}`} />
+              className={`w-full min-h-[48px] sm:min-h-0 box-border ${inputCls}`} />
             {addErrors.amount && <p className="text-[var(--c-expense)] text-xs mt-1">{addErrors.amount}</p>}
           </div>
           <div>
             <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.type}</label>
             <select value={addForm.type} onChange={(e) => setAddForm({ ...addForm, type: e.target.value as "Expense" | "Payment" })}
-              className={`w-full ${inputCls}`}>
+              className={`w-full min-h-[48px] sm:min-h-0 box-border ${inputCls}`}>
               <option value="Expense">{t.creditCards.expense}</option>
               <option value="Payment">{t.creditCards.payment}</option>
             </select>
@@ -519,15 +547,15 @@ export default function CardDetailPage() {
           <div>
             <label className="block text-[12px] font-medium text-[var(--c-text-2)] mb-1.5">{t.creditCards.categoryOptional}</label>
             <select value={addForm.categoryId} onChange={(e) => setAddForm({ ...addForm, categoryId: e.target.value })}
-              className={`w-full ${inputCls}`}>
+              className={`w-full min-h-[48px] sm:min-h-0 box-border ${inputCls}`}>
               <option value="">{t.creditCards.noneCategory}</option>
               {categories.map((c) => (
                 <option key={c._id} value={c._id}>{c.key ? (catTranslations[c.key] ?? c.name) : c.name}</option>
               ))}
             </select>
           </div>
-          <button onClick={handleAddSubmit}
-            className="w-full py-2.5 bg-[var(--c-brand)] text-white rounded-lg font-medium hover:bg-[var(--c-brand-hov)] transition-colors text-sm">
+          <button type="button" onClick={handleAddSubmit}
+            className="w-full min-h-[48px] py-3 bg-[var(--c-brand)] text-white rounded-xl font-medium hover:bg-[var(--c-brand-hov)] active:bg-[var(--c-brand-hov)] transition-colors text-base sm:text-sm touch-manipulation">
             {t.creditCards.addTransaction}
           </button>
         </div>
@@ -538,11 +566,11 @@ export default function CardDetailPage() {
         <p className="text-sm text-[var(--c-text-2)] mb-5">
           {t.creditCards.deleteConfirmText} &ldquo;{deleteTarget?.description}&rdquo;?
         </p>
-        <div className="flex gap-2 justify-end">
-          <button onClick={() => setDeleteTarget(null)}
-            className="px-4 py-2 text-sm border border-[var(--c-border)] rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors">{t.common.cancel}</button>
-          <button onClick={handleDelete}
-            className="px-4 py-2 text-sm text-white bg-[var(--c-expense)] rounded-lg hover:bg-[var(--c-expense-hov)] transition-colors">{t.common.delete}</button>
+        <div className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end">
+          <button type="button" onClick={() => setDeleteTarget(null)}
+            className="w-full sm:w-auto min-h-[48px] sm:min-h-0 px-4 py-3 sm:py-2 text-sm border border-[var(--c-border)] rounded-xl sm:rounded-lg text-[var(--c-text-2)] hover:bg-[var(--c-surface)] transition-colors touch-manipulation">{t.common.cancel}</button>
+          <button type="button" onClick={handleDelete}
+            className="w-full sm:w-auto min-h-[48px] sm:min-h-0 px-4 py-3 sm:py-2 text-sm text-white bg-[var(--c-expense)] rounded-xl sm:rounded-lg hover:bg-[var(--c-expense-hov)] active:opacity-90 transition-colors touch-manipulation">{t.common.delete}</button>
         </div>
       </Modal>
     </div>

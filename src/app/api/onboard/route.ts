@@ -129,14 +129,8 @@ export async function POST(request: Request) {
       accountMap[finalSlug] = String(existing._id);
     }
 
-    // 3. Categories
-    const existingCats = await Category.countDocuments({ userId });
-    if (existingCats === 0 && payload.categories.length > 0) {
-      await Category.insertMany(payload.categories.map((c) => ({ ...c, userId })));
-      results.categories = `Created ${payload.categories.length}`;
-    } else {
-      results.categories = `Skipped (${existingCats} exist)`;
-    }
+    // 3. Categories are now global — skip per-user creation
+    results.categories = "Skipped (global categories)";
 
     // 4. Transactions — keyed by account slug
     let totalTx = 0;

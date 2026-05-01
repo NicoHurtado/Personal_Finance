@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/auth/logout", "/api/auth/users", "/api/seed", "/api/onboard"];
+const PUBLIC_PATHS = ["/login", "/register", "/api/auth/login", "/api/auth/logout", "/api/auth/users", "/api/auth/register", "/api/seed", "/api/onboard", "/api/ensure-ibkr"];
 
 function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set("X-Content-Type-Options", "nosniff");
