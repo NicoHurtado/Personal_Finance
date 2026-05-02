@@ -23,6 +23,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useT } from "@/hooks/useT";
+import PortfolioCalculator from "@/components/PortfolioCalculator";
 
 // ── Types ──────────────────────────────────────────────────────────────
 interface RawHolding {
@@ -101,6 +102,9 @@ export default function BrokerDetailPage() {
   const [loading, setLoading] = useState(true);
   const [trm, setTrm] = useState<number>(0);
   const [priceTimestamp, setPriceTimestamp] = useState<string>("");
+
+  // Tab
+  const [activeTab, setActiveTab] = useState<"holdings" | "calculator">("holdings");
 
   // Search & filter
   const [search, setSearch] = useState("");
@@ -390,8 +394,31 @@ export default function BrokerDetailPage() {
             }}
           />
         )}
+
+        {/* Tabs */}
+        {account && (
+          <div className="flex gap-1 mt-4 bg-[var(--c-surface)] rounded-lg p-1 w-fit">
+            {(["holdings", "calculator"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  activeTab === tab
+                    ? "bg-card text-[var(--c-text)] shadow-sm"
+                    : "text-[var(--c-text-3)] hover:text-[var(--c-text)]"
+                }`}
+              >
+                {tab === "holdings" ? ((t as any).calculator?.holdings || t.stocks.myHoldings) : ((t as any).calculator?.tab || "Calculator")}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
+      {activeTab === "calculator" && account ? (
+        <PortfolioCalculator accountId={account._id} />
+      ) : (
+      <>
       {/* Stat cards */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -655,6 +682,9 @@ export default function BrokerDetailPage() {
             </div>
           </Card>
         </div>
+      )}
+
+      </>
       )}
 
       {/* Delete confirmation modal */}
