@@ -20,6 +20,11 @@ export function middleware(request: NextRequest) {
     PUBLIC_PATHS.some((p) => pathname.startsWith(p)) ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/favicon") ||
+    pathname.startsWith("/icons/") ||
+    pathname.startsWith("/apple-touch-icon") ||
+    pathname === "/manifest.json" ||
+    pathname === "/sw.js" ||
+    pathname === "/workbox-4754cb34.js" ||
     pathname.endsWith(".ico") ||
     pathname.endsWith(".svg")
   ) {
@@ -48,5 +53,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico|icons|apple-touch-icon|manifest.json|sw.js|workbox).*)"],
 };
