@@ -16,14 +16,14 @@ export const metadata: Metadata = {
       { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
     ],
     apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png?v=2", sizes: "180x180", type: "image/png" },
     ],
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
     title: "Finance",
-    startupImage: "/apple-touch-icon.png",
+    startupImage: "/apple-touch-icon.png?v=2",
   },
   formatDetection: { telephone: false },
 };
@@ -46,7 +46,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={cn("font-sans", outfit.variable)} suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png" />
         {/* Apply dark class BEFORE first paint to avoid flash */}
