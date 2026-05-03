@@ -137,10 +137,8 @@ export default function PortfolioCalculator({ accountId }: Props) {
 
   // ── Helpers ──────────────────────────────────────────────────────────
   const totalPct = useMemo(() => {
-    const ungrouped = assets.filter((a) => !a.groupId).reduce((s, a) => s + a.percentage, 0);
-    const grouped = groups.reduce((s, g) => s + g.percentage, 0);
-    return Math.round((ungrouped + grouped) * 100) / 100;
-  }, [assets, groups]);
+    return Math.round(assets.reduce((s, a) => s + a.percentage, 0) * 100) / 100;
+  }, [assets]);
 
   const pctDiff = Math.round((100 - totalPct) * 100) / 100;
 
@@ -154,48 +152,10 @@ export default function PortfolioCalculator({ accountId }: Props) {
   }
 
   function removeAsset(ticker: string) {
-    const asset = assets.find((a) => a.ticker === ticker);
-    let nextAssets = assets.filter((a) => a.ticker !== ticker);
-    let nextGroups = [...groups];
-
-    if (asset?.groupId) {
-      nextGroups = nextGroups.map((g) => {
-        if (g.id !== asset.groupId) return g;
-        const remaining = g.tickers.filter((t) => t.ticker !== ticker);
-        if (remaining.length === 0) return g;
-        const totalWeight = remaining.reduce((s, t) => s + t.weight, 0);
-        return {
-          ...g,
-          tickers: remaining.map((t) => ({ ...t, weight: (t.weight / totalWeight) * 100 })),
-        };
-      }).filter((g) => g.tickers.length > 0 || nextAssets.some((a) => a.groupId === g.id));
-    } else {
-      // Redistribute ungrouped proportionally
-      const remainingUngrouped = nextAssets.filter((a) => !a.groupId);
-      const removedPct = asset?.percentage || 0;
-      if (remainingUngrouped.length > 0 && removedPct > 0) {
-        const totalRemaining = remainingUngrouped.reduce((s, a) => s + a.percentage, 0);
-        if (totalRemaining > 0) {
-          nextAssets = nextAssets.map((a) => {
-            if (a.groupId) return a;
-            return { ...a, percentage: a.percentage + (a.percentage / totalRemaining) * removedPct };
-          });
-        } else {
-          const share = removedPct / remainingUngrouped.length;
-          nextAssets = nextAssets.map((a) => {
-            if (a.groupId) return a;
-            return { ...a, percentage: a.percentage + share };
-          });
-        }
-      }
-    }
-
-    // Clean up empty groups
-    nextGroups = nextGroups.filter((g) => {
-      const groupAssets = nextAssets.filter((a) => a.groupId === g.id);
-      return groupAssets.length > 0;
-    });
-
+    const nextAssets = assets.filter((a) => a.ticker !== ticker);
+    const nextGroups = groups.filter((g) =>
+      nextAssets.some((a) => a.groupId === g.id)
+    );
     setAssets(nextAssets);
     setGroups(nextGroups);
     save(nextAssets, nextGroups);
@@ -205,21 +165,6 @@ export default function PortfolioCalculator({ accountId }: Props) {
     const next = assets.map((a) => (a.ticker === ticker ? { ...a, percentage: pct } : a));
     setAssets(next);
     save(next, groups);
-  }
-
-  function updateGroupPct(groupId: string, pct: number) {
-    const next = groups.map((g) => (g.id === groupId ? { ...g, percentage: pct } : g));
-    setGroups(next);
-    save(assets, next);
-  }
-
-  function updateGroupTickerWeight(groupId: string, ticker: string, weight: number) {
-    const next = groups.map((g) => {
-      if (g.id !== groupId) return g;
-      return { ...g, tickers: g.tickers.map((t) => (t.ticker === ticker ? { ...t, weight } : t)) };
-    });
-    setGroups(next);
-    save(assets, next);
   }
 
   function createGroup(name: string) {
@@ -240,66 +185,23 @@ export default function PortfolioCalculator({ accountId }: Props) {
   }
 
   function moveToGroup(ticker: string, groupId: string) {
-    const asset = assets.find((a) => a.ticker === ticker);
-    if (!asset) return;
-
-    // Remove from old group if any
-    let nextGroups = groups.map((g) => {
-      if (asset.groupId && g.id === asset.groupId) {
-        const remaining = g.tickers.filter((t) => t.ticker !== ticker);
-        const totalWeight = remaining.reduce((s, t) => s + t.weight, 0);
-        return {
-          ...g,
-          tickers: remaining.length > 0
-            ? remaining.map((t) => ({ ...t, weight: totalWeight > 0 ? (t.weight / totalWeight) * 100 : 100 / remaining.length }))
-            : [],
-        };
-      }
-      return g;
-    });
-
-    // Add to new group
-    nextGroups = nextGroups.map((g) => {
-      if (g.id !== groupId) return g;
-      const newTickers = [...g.tickers, { ticker, weight: 0 }];
-      const equalWeight = 100 / newTickers.length;
-      return { ...g, tickers: newTickers.map((t) => ({ ...t, weight: equalWeight })) };
-    });
-
     const nextAssets = assets.map((a) =>
-      a.ticker === ticker ? { ...a, groupId, percentage: 0 } : a
+      a.ticker === ticker ? { ...a, groupId } : a
     );
-
-    // Clean empty groups
-    nextGroups = nextGroups.filter((g) => g.tickers.length > 0 || nextAssets.some((a) => a.groupId === g.id));
-
+    let nextGroups = groups;
+    if (!groups.some((g) => g.id === groupId)) return;
+    // clean up groups that lost all their members
+    nextGroups = groups.filter((g) => nextAssets.some((a) => a.groupId === g.id));
     setAssets(nextAssets);
     setGroups(nextGroups);
     save(nextAssets, nextGroups);
   }
 
   function removeFromGroup(ticker: string) {
-    const asset = assets.find((a) => a.ticker === ticker);
-    if (!asset?.groupId) return;
-
-    let nextGroups = groups.map((g) => {
-      if (g.id !== asset.groupId) return g;
-      const remaining = g.tickers.filter((t) => t.ticker !== ticker);
-      const totalWeight = remaining.reduce((s, t) => s + t.weight, 0);
-      return {
-        ...g,
-        tickers: remaining.length > 0
-          ? remaining.map((t) => ({ ...t, weight: totalWeight > 0 ? (t.weight / totalWeight) * 100 : 100 / remaining.length }))
-          : [],
-      };
-    });
-
-    nextGroups = nextGroups.filter((g) => g.tickers.length > 0);
-
     const nextAssets = assets.map((a) =>
-      a.ticker === ticker ? { ...a, groupId: undefined, percentage: 0 } : a
+      a.ticker === ticker ? { ...a, groupId: undefined } : a
     );
-
+    const nextGroups = groups.filter((g) => nextAssets.some((a) => a.groupId === g.id));
     setAssets(nextAssets);
     setGroups(nextGroups);
     save(nextAssets, nextGroups);
@@ -309,42 +211,18 @@ export default function PortfolioCalculator({ accountId }: Props) {
   const investAmount = parseFloat(amount) || 0;
 
   const tableRows = useMemo(() => {
-    const rows: { ticker: string; name: string; pct: number; usd: number; cop: number; groupName?: string; groupColor?: string }[] = [];
+    const groupColorMap = new Map(groups.map((g, i) => [g.id, GROUP_COLORS[i % GROUP_COLORS.length]]));
+    const groupNameMap = new Map(groups.map((g) => [g.id, g.name]));
 
-    // Ungrouped assets
-    for (const a of assets.filter((a) => !a.groupId)) {
-      rows.push({
-        ticker: a.ticker,
-        name: a.name,
-        pct: a.percentage,
-        usd: (a.percentage / 100) * investAmount,
-        cop: (a.percentage / 100) * investAmount * trm,
-      });
-    }
-
-    // Grouped assets
-    for (let gi = 0; gi < groups.length; gi++) {
-      const g = groups[gi];
-      const groupAssets = assets.filter((a) => a.groupId === g.id);
-      const groupColor = GROUP_COLORS[gi % GROUP_COLORS.length];
-
-      for (const ga of groupAssets) {
-        const gt = g.tickers.find((t) => t.ticker === ga.ticker);
-        const weight = gt?.weight || 0;
-        const effectivePct = (g.percentage * weight) / 100;
-        rows.push({
-          ticker: ga.ticker,
-          name: ga.name,
-          pct: Math.round(effectivePct * 100) / 100,
-          usd: (effectivePct / 100) * investAmount,
-          cop: (effectivePct / 100) * investAmount * trm,
-          groupName: g.name,
-          groupColor,
-        });
-      }
-    }
-
-    return rows;
+    return assets.map((a) => ({
+      ticker: a.ticker,
+      name: a.name,
+      pct: a.percentage,
+      usd: (a.percentage / 100) * investAmount,
+      cop: (a.percentage / 100) * investAmount * trm,
+      groupName: a.groupId ? groupNameMap.get(a.groupId) : undefined,
+      groupColor: a.groupId ? groupColorMap.get(a.groupId) : undefined,
+    }));
   }, [assets, groups, investAmount, trm]);
 
   // ── Pie data ─────────────────────────────────────────────────────────
@@ -492,6 +370,7 @@ export default function PortfolioCalculator({ accountId }: Props) {
         {groups.map((g, gi) => {
           const groupAssets = assets.filter((a) => a.groupId === g.id);
           const color = GROUP_COLORS[gi % GROUP_COLORS.length];
+          const groupTotal = Math.round(groupAssets.reduce((s, a) => s + a.percentage, 0) * 100) / 100;
           return (
             <div key={g.id} className="mb-4 rounded-xl border border-[var(--c-border)] overflow-hidden">
               <div className="flex items-center gap-3 px-4 py-3" style={{ borderLeft: `3px solid ${color}` }}>
@@ -499,17 +378,7 @@ export default function PortfolioCalculator({ accountId }: Props) {
                   <span className="text-sm font-medium text-[var(--c-text)]">{g.name}</span>
                   <span className="text-xs text-[var(--c-text-3)] ml-2">({groupAssets.length} {calc.tickers || "tickers"})</span>
                 </div>
-                <input
-                  type="number"
-                  value={g.percentage || ""}
-                  onChange={(e) => updateGroupPct(g.id, parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  className="w-16 text-right text-sm border border-[var(--c-border)] rounded-lg px-2 py-1 bg-card text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
-                />
-                <span className="text-xs text-[var(--c-text-3)]">%</span>
+                <span className="text-sm font-medium tabular-nums text-[var(--c-text-2)]">{groupTotal}%</span>
                 <button
                   onClick={() => deleteGroup(g.id)}
                   className="text-[var(--c-text-3)] hover:text-[var(--c-expense)] transition-colors"
@@ -521,48 +390,44 @@ export default function PortfolioCalculator({ accountId }: Props) {
               </div>
               {groupAssets.length > 0 && (
                 <div className="px-4 pb-3 space-y-1.5">
-                  {groupAssets.map((a) => {
-                    const gt = g.tickers.find((t) => t.ticker === a.ticker);
-                    return (
-                      <div key={a.ticker} className="flex items-center gap-3 py-1.5 pl-3 group">
-                        <div className="flex-1 min-w-0">
-                          <span className="text-xs font-medium text-[var(--c-text)]">{a.ticker}</span>
-                          <span className="text-[11px] text-[var(--c-text-3)] ml-1.5">{a.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-[var(--c-text-3)]">{calc.weight || "Weight"}:</span>
-                          <input
-                            type="number"
-                            value={gt?.weight ? Math.round(gt.weight * 100) / 100 : ""}
-                            onChange={(e) => updateGroupTickerWeight(g.id, a.ticker, parseFloat(e.target.value) || 0)}
-                            placeholder="0"
-                            min="0"
-                            max="100"
-                            step="0.5"
-                            className="w-14 text-right text-xs border border-[var(--c-border)] rounded px-1.5 py-0.5 bg-card text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
-                          />
-                          <span className="text-[10px] text-[var(--c-text-3)]">%</span>
-                          <button
-                            onClick={() => removeFromGroup(a.ticker)}
-                            className="text-[var(--c-text-3)] hover:text-[var(--c-text)] transition-colors opacity-0 group-hover:opacity-100 text-[10px]"
-                            title={calc.removeFromGroup || "Remove from group"}
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => removeAsset(a.ticker)}
-                            className="text-[var(--c-text-3)] hover:text-[var(--c-expense)] transition-colors opacity-0 group-hover:opacity-100"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
+                  {groupAssets.map((a) => (
+                    <div key={a.ticker} className="flex items-center gap-3 py-1.5 pl-3 group">
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs font-medium text-[var(--c-text)]">{a.ticker}</span>
+                        <span className="text-[11px] text-[var(--c-text-3)] ml-1.5">{a.name}</span>
                       </div>
-                    );
-                  })}
+                      <div className="flex items-center gap-1.5">
+                        <input
+                          type="number"
+                          value={a.percentage || ""}
+                          onChange={(e) => updateAssetPct(a.ticker, parseFloat(e.target.value) || 0)}
+                          placeholder="0"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          className="w-16 text-right text-xs border border-[var(--c-border)] rounded px-1.5 py-0.5 bg-card text-[var(--c-text)] focus:outline-none focus:ring-1 focus:ring-[var(--c-brand)]"
+                        />
+                        <span className="text-[10px] text-[var(--c-text-3)]">%</span>
+                        <button
+                          onClick={() => removeFromGroup(a.ticker)}
+                          className="text-[var(--c-text-3)] hover:text-[var(--c-text)] transition-colors opacity-0 group-hover:opacity-100"
+                          title={calc.removeFromGroup || "Remove from group"}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => removeAsset(a.ticker)}
+                          className="text-[var(--c-text-3)] hover:text-[var(--c-expense)] transition-colors opacity-0 group-hover:opacity-100"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
               {groupAssets.length === 0 && (
