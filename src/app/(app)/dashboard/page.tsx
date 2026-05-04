@@ -404,6 +404,54 @@ export default function DashboardPage() {
     return { data, selectedPeriodExpense };
   }, [serverCashFlow, serverDailyCashFlow, forwardCapitalByDate, accounts, trm, netCapital, chartView, selectedMonth, selectedYear]);
 
+  /* ---------- Monthly income/expense stats ---------- */
+
+  const monthlyStats = useMemo(() => {
+    const usdAccountIds = new Set<string>();
+    accounts.forEach((a) => { if (a.currency === "USD") usdAccountIds.add(a._id); });
+    const safeTrm = trm || 0;
+
+    const getMonthTotals = (ym: string) => {
+      const monthData = serverCashFlow[ym];
+      if (!monthData) return { income: 0, expenses: 0 };
+      let income = 0, expenses = 0;
+      for (const [accId, vals] of Object.entries(monthData)) {
+        const mult = usdAccountIds.has(accId) ? safeTrm : 1;
+        income += vals.income * mult;
+        expenses += vals.expenses * mult;
+      }
+      return { income, expenses };
+    };
+
+    // "Selected period" income — mirrors how expenses work in cashFlow useMemo
+    let selectedPeriodIncome = 0;
+    if (chartView === "month") {
+      selectedPeriodIncome = getMonthTotals(selectedMonth).income;
+    } else {
+      // year view: sum all months in the selected year
+      for (let mo = 1; mo <= 12; mo++) {
+        const ym = `${selectedYear}-${String(mo).padStart(2, "0")}`;
+        selectedPeriodIncome += getMonthTotals(ym).income;
+      }
+    }
+
+    const now = new Date();
+    const currentYm = ymKey(now);
+    const lastYm = ymKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+
+    const current = getMonthTotals(currentYm);
+    const last = getMonthTotals(lastYm);
+
+    const expenseDelta = last.expenses > 0
+      ? ((current.expenses - last.expenses) / last.expenses) * 100
+      : 0;
+
+    const lastMonthDeficit = last.expenses > last.income && last.income > 0;
+    const lastMonthSurplus = last.income > last.expenses && last.income > 0;
+
+    return { current, last, expenseDelta, lastMonthDeficit, lastMonthSurplus, currentYm, lastYm, selectedPeriodIncome };
+  }, [serverCashFlow, accounts, trm, chartView, selectedMonth, selectedYear]);
+
   /* ---------- Wallet cards ---------- */
 
   const walletCards = useMemo(() => {
@@ -479,99 +527,84 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Hero: Total Balance */}
-      <section className="rounded-2xl bg-[var(--c-brand)] text-white p-7 md:p-9 relative overflow-hidden">
-        <div aria-hidden className="absolute -top-24 -right-20 w-[340px] h-[340px] rounded-full opacity-[0.18]" style={{ background: "radial-gradient(closest-side, var(--c-grad2), transparent)" }} />
-        <div aria-hidden className="absolute -bottom-32 -left-10 w-[280px] h-[280px] rounded-full opacity-[0.10]" style={{ background: "radial-gradient(closest-side, var(--c-grad1), transparent)" }} />
-
-        <div className="relative flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-          <div>
-            <p className="text-[12px] text-white/60 mb-2">{t.dashboard.totalCapital}</p>
-            <p className="text-display tabular-nums">{formatCOP(netCapital)}</p>
-
-            <div className="mt-5 flex flex-wrap items-center gap-x-8 gap-y-2">
-              {liquidityCOP !== 0 && (
-                <div>
-                  <p className="text-[11px] text-white/60">{t.nav.debit}</p>
-                  <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(liquidityCOP)}</p>
-                  {liquidityUSD !== 0 && <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(liquidityUSD)} {t.dashboard.inUSD}</p>}
-                </div>
-              )}
-              {fixedIncomeCOP !== 0 && (
-                <div>
-                  <p className="text-[11px] text-white/60">{t.nav.fixedIncome}</p>
-                  <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(fixedIncomeCOP)}</p>
-                </div>
-              )}
-              {hapiCOP !== 0 && (
-                <div>
-                  <p className="text-[11px] text-white/60">{t.nav.investments}</p>
-                  <p className="text-[15px] font-medium tabular-nums text-white">{formatCOP(hapiCOP)}</p>
-                  <p className="text-[11px] text-white/60 tabular-nums">{formatUSD(hapiUSD)}</p>
-                </div>
-              )}
-              {debtAbs > 0 && (
-                <div>
-                  <p className="text-[11px] text-white/60">{t.dashboard.totalDebt}</p>
-                  <p className="text-[15px] font-medium tabular-nums text-[var(--c-expense-text)]">{formatCOP(debtAbs)}</p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <Link href="/credit-cards" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>
-              {t.nav.cards}
-            </Link>
-            <Link href="/savings" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 9.75l9-6 9 6M4.5 10.5v9.75a.75.75 0 00.75.75h3.75V15a1.5 1.5 0 013 0v6h3.75a.75.75 0 00.75-.75V10.5" /></svg>
-              {t.nav.debit}
-            </Link>
-            <Link href="/fixed-income" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              {t.nav.fixedIncome}
-            </Link>
-            <Link href="/stocks" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/10 text-white text-[13px] font-medium hover:bg-white/15 transition-colors">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
-              {t.nav.stocks}
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Stat cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18" /></svg>}
+      {/* Portfolio Overview */}
+      <section className={`grid grid-cols-1 gap-3 ${hapiCOP !== 0 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+        {/* Débito */}
+        <PillarCard
+          href="/savings"
           label={t.nav.debit}
-          value={formatCOP(liquidityCOP)}
+          mainValue={formatCOP(liquidityCOP)}
           secondary={liquidityUSD !== 0 ? `${formatUSD(liquidityUSD)} ${t.dashboard.inUSD}` : undefined}
-          period={t.savings.title}
+          icon={
+            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18" />
+            </svg>
+          }
+          items={debitAccounts.map((a) => ({
+            name: a.name,
+            value: formatCOP(a.currency === "USD" ? a.balance * (trm || 0) : a.balance),
+            secondary: a.currency === "USD" ? formatUSD(a.balance) : undefined,
+          }))}
         />
-        <StatCard
-          icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+
+        {/* Renta Fija */}
+        <PillarCard
+          href="/fixed-income"
           label={t.nav.fixedIncome}
-          value={formatCOP(fixedIncomeCOP)}
-          growthAmount={fixedIncomeGrowth}
-          period={t.dashboard.hasGrown}
+          mainValue={formatCOP(fixedIncomeCOP)}
+          secondary={fixedIncomeGrowth !== 0 ? `${fixedIncomeGrowth > 0 ? "+" : ""}${formatCOP(fixedIncomeGrowth)} ${t.dashboard.hasGrown}` : undefined}
+          secondaryClassName={fixedIncomeGrowth > 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}
+          icon={
+            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          items={fixedIncomeAccounts.map((a) => ({
+            name: a.name,
+            value: formatCOP(a.currency === "USD" ? a.balance * (trm || 0) : a.balance),
+            secondary: a.currency === "USD" ? formatUSD(a.balance) : undefined,
+          }))}
         />
-        {hapiCOP !== 0 && (
-          <StatCard
-            icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>}
-            label={t.dashboard.investments}
-            value={formatCOP(hapiCOP)}
-            secondary={formatUSD(hapiUSD)}
-            period={t.nav.stocks}
-          />
-        )}
-        <StatCard
-          icon={<svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z" /></svg>}
-          label={t.dashboard.totalDebt}
-          value={formatCOP(debtAbs)}
-          period={t.dashboard.creditCards}
-          valueClassName="text-[var(--c-expense)]"
-        />
+
+        {/* Acciones — solo si hay saldo */}
+        {hapiCOP !== 0 && <PillarCard
+          href="/stocks"
+          label={t.nav.stocks}
+          mainValue={hapiCOP !== 0 ? formatCOP(hapiCOP) : "—"}
+          secondary={hapiUSD !== 0 ? formatUSD(hapiUSD) : undefined}
+          icon={
+            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          }
+          items={holdings.map((h) => {
+            const quote = stockPrices.find((q) => q.ticker === h.ticker);
+            const hasLive = stockPrices.some((q) => q.price !== null);
+            const price = hasLive ? (quote?.price ?? h.costBasisPerShare) : h.costBasisPerShare;
+            const valueUSD = h.shares * price;
+            return {
+              name: h.ticker,
+              secondary: h.companyName,
+              value: formatUSD(valueUSD),
+            };
+          })}
+        />}
+
+        {/* Capital Total — right side, secondary */}
+        <div className="md:col-span-1 rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface-2)] px-5 py-5 flex flex-col justify-between">
+          <div>
+            <p className="text-[11px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-4">{t.dashboard.totalCapital}</p>
+            <p className="text-[28px] font-bold tabular-nums text-[var(--c-text)] leading-none">{formatCOP(netCapital)}</p>
+          </div>
+          {debtAbs > 0 && (
+            <div className="mt-5 pt-4 border-t border-[var(--c-border)]">
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-[var(--c-text-4)]">{t.dashboard.totalDebt}</p>
+                <p className="text-[13px] font-semibold tabular-nums text-[var(--c-expense)]">{formatCOP(debtAbs)}</p>
+              </div>
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Cash Flow chart + side cards */}
@@ -641,20 +674,27 @@ export default function DashboardPage() {
           })()}
         </Card>
 
-        <div className="lg:col-span-1 flex flex-col gap-4">
-          <Card padding="md" className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[var(--c-surface-4)] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[var(--c-brand)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18L9 11.25l4.306 4.307a11.95 11.95 0 015.814-5.518l2.74-1.22m0 0l-5.94-2.28m5.94 2.28l-2.28 5.941" /></svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.capital}</p>
-              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(netCapital)}</p>
-              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{t.dashboard.currentBalance}</p>
-            </div>
-          </Card>
+        <div className="lg:col-span-1 flex flex-col gap-3">
+          {/* Ingresos — dinámico según período del gráfico */}
           <Card padding="md" className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-xl bg-[var(--c-income-bg)] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[var(--c-income)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" /></svg>
+              <svg className="w-4 h-4 text-[var(--c-income)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+              </svg>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{lang === "es" ? "Ingresos" : "Income"}</p>
+              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(monthlyStats.selectedPeriodIncome)}</p>
+              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth, monthLocale) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
+            </div>
+          </Card>
+
+          {/* Gastos este mes */}
+          <Card padding="md" className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-[var(--c-expense-bg2)] flex items-center justify-center shrink-0">
+              <svg className="w-4 h-4 text-[var(--c-expense)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+              </svg>
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.expenses}</p>
@@ -662,6 +702,47 @@ export default function DashboardPage() {
               <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth, monthLocale) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
             </div>
           </Card>
+
+          {/* Análisis mes anterior */}
+          {monthlyStats.last.income > 0 && (
+            <Card padding="md">
+              <p className="text-[10px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-2.5">
+                {lang === "es" ? "Análisis — mes anterior" : "Analysis — last month"}
+              </p>
+
+              {/* Deficit / surplus badge */}
+              <div className={`flex items-start gap-2 mb-3 rounded-lg px-3 py-2.5 ${
+                monthlyStats.lastMonthDeficit
+                  ? "bg-[var(--c-expense-bg2)]"
+                  : "bg-[var(--c-income-bg)]"
+              }`}>
+                <span className="mt-0.5 shrink-0 text-[13px]">
+                  {monthlyStats.lastMonthDeficit ? "⚠️" : "✓"}
+                </span>
+                <p className={`text-[11px] leading-snug font-medium ${
+                  monthlyStats.lastMonthDeficit ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"
+                }`}>
+                  {monthlyStats.lastMonthDeficit
+                    ? (lang === "es" ? "El mes pasado gastaste más de lo que ingresó" : "Last month you spent more than you earned")
+                    : (lang === "es" ? "El mes pasado cerraste en positivo" : "Last month you had a surplus")}
+                </p>
+              </div>
+
+              {/* % change in expenses */}
+              {monthlyStats.last.expenses > 0 && (
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] text-[var(--c-text-4)]">
+                    {lang === "es" ? "Gastos vs mes anterior" : "Expenses vs last month"}
+                  </p>
+                  <span className={`text-[12px] font-semibold tabular-nums ${
+                    monthlyStats.expenseDelta <= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"
+                  }`}>
+                    {monthlyStats.expenseDelta > 0 ? "+" : ""}{monthlyStats.expenseDelta.toFixed(1)}%
+                  </span>
+                </div>
+              )}
+            </Card>
+          )}
         </div>
       </section>
 
@@ -799,30 +880,76 @@ function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any)
   );
 }
 
-/* ---------- StatCard ---------- */
+/* ---------- PillarCard ---------- */
 
-function StatCard({ icon, label, value, secondary, growthAmount, period, valueClassName = "text-[var(--c-text)]" }: {
-  icon: React.ReactNode; label: string; value: string; secondary?: string; growthAmount?: number; period: string; valueClassName?: string;
+interface PillarItem { name: string; value: string; secondary?: string }
+
+function PillarCard({
+  href, label, mainValue, secondary, secondaryClassName = "text-[var(--c-text-4)]",
+  icon, items,
+}: {
+  href: string; label: string; mainValue: string; secondary?: string;
+  secondaryClassName?: string; icon: React.ReactNode; items: PillarItem[];
 }) {
-  const hasGrowth = growthAmount !== undefined && isFinite(growthAmount) && growthAmount !== 0;
+  const [hovered, setHovered] = useState(false);
+
   return (
-    <Card padding="md" hover>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-[var(--c-text-2)]">
-          <div className="w-7 h-7 rounded-lg bg-[var(--c-surface-2)] flex items-center justify-center">{icon}</div>
-          <span className="text-[12px] font-medium text-[var(--c-text-2)]">{label}</span>
+    <div
+      className="md:col-span-1 relative"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <Link
+        href={href}
+        className={`group flex flex-col rounded-2xl border bg-card px-5 py-5 transition-all duration-200 ${
+          hovered ? "border-[var(--c-brand)]/30 shadow-sm" : "border-[var(--c-border)]"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="w-8 h-8 rounded-xl bg-[var(--c-surface-2)] flex items-center justify-center">
+            {icon}
+          </div>
+          <svg
+            className={`w-3.5 h-3.5 transition-colors ${hovered ? "text-[var(--c-brand)]" : "text-[var(--c-text-5)]"}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+          </svg>
         </div>
-        <span className="text-[10px] text-[var(--c-text-3)]">{period}</span>
-      </div>
-      <div className="flex items-baseline gap-2">
-        <p className={`text-[22px] font-semibold tabular-nums ${valueClassName}`}>{value}</p>
-        {hasGrowth && (
-          <span className={`text-[11px] font-medium tabular-nums ${growthAmount! > 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
-            {growthAmount! > 0 ? "+" : ""}{formatCOP(growthAmount!)}
-          </span>
+        <p className="text-[11px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-1.5">{label}</p>
+        <p className="text-[24px] font-semibold tabular-nums text-[var(--c-text)] leading-none">{mainValue}</p>
+        {secondary && (
+          <p className={`text-[11px] mt-1.5 tabular-nums font-medium ${secondaryClassName}`}>{secondary}</p>
         )}
-      </div>
-      {secondary && <p className="text-[11px] text-[var(--c-text-3)] mt-1 tabular-nums">{secondary}</p>}
-    </Card>
+      </Link>
+
+      {/* Breakdown tooltip */}
+      {items.length > 0 && (
+        <div
+          className={`absolute top-full left-0 right-0 mt-2 z-50 transition-all duration-200 ${
+            hovered ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"
+          }`}
+        >
+          <div className="rounded-xl border border-[var(--c-border)] bg-card shadow-lg shadow-black/5 overflow-hidden">
+            {/* small arrow */}
+            <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 border-l border-t border-[var(--c-border)] bg-card" />
+            <div className="px-4 py-3 space-y-2.5">
+              {items.map((item, i) => (
+                <div key={i} className="flex items-center justify-between gap-3 min-w-0">
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-medium text-[var(--c-text)] truncate">{item.name}</p>
+                    {item.secondary && (
+                      <p className="text-[10px] text-[var(--c-text-4)] truncate">{item.secondary}</p>
+                    )}
+                  </div>
+                  <p className="text-[12px] font-semibold tabular-nums text-[var(--c-text)] shrink-0">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
+

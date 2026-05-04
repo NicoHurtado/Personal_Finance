@@ -67,7 +67,15 @@ export async function GET() {
                 month: { $month: "$date" },
                 type: "$type",
               },
-              total: { $sum: "$amount" },
+              total: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$metadata.excludeFromIncome", true] },
+                    0,
+                    "$amount",
+                  ],
+                },
+              },
             },
           },
           { $sort: { "_id.year": -1, "_id.month": -1 } },
@@ -84,7 +92,15 @@ export async function GET() {
                 day: { $dayOfMonth: "$date" },
                 type: "$type",
               },
-              total: { $sum: "$amount" },
+              total: {
+                $sum: {
+                  $cond: [
+                    { $eq: ["$metadata.excludeFromIncome", true] },
+                    0,
+                    "$amount",
+                  ],
+                },
+              },
               transactions: {
                 $push: {
                   description: "$description",

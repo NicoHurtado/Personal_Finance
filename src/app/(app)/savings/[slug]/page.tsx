@@ -45,7 +45,7 @@ interface Transaction {
   amount: number;
   type: "Income" | "Expense";
   categoryId?: string;
-  metadata?: { isCardPayment?: boolean };
+  metadata?: { isCardPayment?: boolean; excludeFromIncome?: boolean };
 }
 
 interface FormData {
@@ -55,6 +55,7 @@ interface FormData {
   type: "Income" | "Expense";
   categoryId: string;
   isCardPayment: boolean;
+  excludeFromIncome: boolean;
 }
 
 interface FormErrors {
@@ -63,7 +64,7 @@ interface FormErrors {
   amount?: string;
 }
 
-const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income", categoryId: "", isCardPayment: false };
+const emptyForm: FormData = { date: "", description: "", amount: "", type: "Income", categoryId: "", isCardPayment: false, excludeFromIncome: false };
 
 function validateForm(form: FormData, msgs: { dateRequired: string; descRequired: string; amountRequired: string; amountPositive: string }): FormErrors {
   const errors: FormErrors = {};
@@ -278,7 +279,7 @@ export default function DebitAccountPage() {
           amount: Number(addForm.amount),
           type: addForm.type,
           categoryId: addForm.categoryId || undefined,
-          metadata: addIsCardPayment ? { isCardPayment: true } : {},
+          metadata: { ...(addIsCardPayment ? { isCardPayment: true } : {}), ...(addForm.excludeFromIncome ? { excludeFromIncome: true } : {}) },
         }),
       });
       setAddOpen(false);
@@ -293,7 +294,7 @@ export default function DebitAccountPage() {
 
   const startEdit = (t: Transaction) => {
     setEditingId(t._id);
-    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type, categoryId: t.categoryId || "", isCardPayment: t.metadata?.isCardPayment ?? false });
+    setEditForm({ date: t.date.slice(0, 10), description: t.description, amount: String(Math.abs(t.amount)), type: t.type, categoryId: t.categoryId || "", isCardPayment: t.metadata?.isCardPayment ?? false, excludeFromIncome: t.metadata?.excludeFromIncome ?? false });
     setEditErrors({});
   };
 
@@ -306,7 +307,7 @@ export default function DebitAccountPage() {
       await fetch(`/api/v2/transactions/${editingId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type, categoryId: editForm.categoryId || null, metadata: { isCardPayment: editForm.isCardPayment } }),
+        body: JSON.stringify({ date: editForm.date, description: editForm.description, amount: Number(editForm.amount), type: editForm.type, categoryId: editForm.categoryId || null, metadata: { isCardPayment: editForm.isCardPayment, ...(editForm.excludeFromIncome ? { excludeFromIncome: true } : {}) } }),
       });
       setEditingId(null);
       setEditErrors({});
@@ -465,6 +466,15 @@ export default function DebitAccountPage() {
                           className="w-3 h-3 rounded accent-[var(--c-brand)]"
                         />
                         <span className="text-[10px] text-[var(--c-text-3)]">{tr.savings.doNotCountAsExpense}</span>
+                      </label>
+                      <label className="flex items-center gap-1.5 mt-1 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={editForm.excludeFromIncome}
+                          onChange={(e) => setEditForm({ ...editForm, excludeFromIncome: e.target.checked })}
+                          className="w-3 h-3 rounded accent-[var(--c-brand)]"
+                        />
+                        <span className="text-[10px] text-[var(--c-text-3)]">{tr.savings.doNotCountAsIncome}</span>
                       </label>
                     </td>
                     <td className="px-5 md:px-6 py-3 text-right">
@@ -646,6 +656,15 @@ export default function DebitAccountPage() {
               className="w-3.5 h-3.5 rounded accent-[var(--c-brand)]"
             />
             <span className="text-[11px] text-[var(--c-text-3)]">{tr.savings.doNotCountAsExpense}</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={addForm.excludeFromIncome}
+              onChange={(e) => setAddForm({ ...addForm, excludeFromIncome: e.target.checked })}
+              className="w-3.5 h-3.5 rounded accent-[var(--c-brand)]"
+            />
+            <span className="text-[11px] text-[var(--c-text-3)]">{tr.savings.doNotCountAsIncome}</span>
           </label>
           <button onClick={handleAdd} disabled={addSubmitting}
             className="w-full py-2.5 bg-[var(--c-brand)] text-white font-medium rounded-lg hover:bg-[var(--c-brand-hov)] transition-colors disabled:opacity-50 text-sm">
