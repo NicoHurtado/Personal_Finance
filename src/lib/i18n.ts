@@ -11,7 +11,6 @@ export const translations = {
       investments: "Investments",
       personal: "Personal",
       signOut: "Sign out",
-      spreadsheet: "Spreadsheet",
       lightMode: "Light mode",
       darkMode: "Dark mode",
       more: "More",
@@ -292,20 +291,6 @@ export const translations = {
       failedToSave: "Failed to save. Please try again.",
     },
 
-    // ── Spreadsheet ───────────────────────────────────────────────────────────
-    spreadsheet: {
-      autoSaved: "auto-saved",
-      save: "Save",
-      saved: "✓ Saved",
-      clear: "Clear",
-      rows: "Rows",
-      cols: "Cols",
-      sum: "Sum",
-      avg: "Avg",
-      count: "Count",
-      confirmClear: "Clear the entire sheet?",
-    },
-
     // ── Categories ───────────────────────────────────────────────────────
     categories: {
       pago: "Payment",
@@ -404,7 +389,6 @@ export const translations = {
       investments: "Inversiones",
       personal: "Personal",
       signOut: "Cerrar sesión",
-      spreadsheet: "Hoja de cálculo",
       lightMode: "Modo claro",
       darkMode: "Modo oscuro",
       more: "Más",
@@ -683,20 +667,6 @@ export const translations = {
       errorDateRequired: "La fecha es requerida.",
       errorAmountPositive: "El monto debe ser mayor a 0.",
       failedToSave: "Error al guardar. Intenta de nuevo.",
-    },
-
-    // ── Spreadsheet ───────────────────────────────────────────────────────────
-    spreadsheet: {
-      autoSaved: "guardado automáticamente",
-      save: "Guardar",
-      saved: "✓ Guardado",
-      clear: "Limpiar",
-      rows: "Filas",
-      cols: "Columnas",
-      sum: "Suma",
-      avg: "Promedio",
-      count: "Conteo",
-      confirmClear: "¿Borrar toda la hoja?",
     },
 
     // ── Categories ───────────────────────────────────────────────────────

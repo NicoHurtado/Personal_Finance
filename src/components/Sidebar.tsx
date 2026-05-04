@@ -94,16 +94,6 @@ export default function Sidebar() {
     },
   ];
 
-  const spreadsheetItem: NavItem = {
-    href: "/spreadsheet",
-    label: t.nav.spreadsheet,
-    icon: (
-      <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125h-1.5m2.625-1.5v-1.5c0-.621-.504-1.125-1.125-1.125M6 18.375v-1.5c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v1.5M6 18.375c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125M6 18.375V7.875c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v10.5" />
-      </svg>
-    ),
-  };
-
   // Bottom bar: only the 4 essential nav items
   const bottomBarItems: NavItem[] = [...generalItems, ...investmentItems];
 
@@ -179,23 +169,6 @@ export default function Sidebar() {
             </div>
           </div>
         </nav>
-
-        {/* Spreadsheet shortcut */}
-        <div className="px-3 pb-3">
-          <Link
-            href="/spreadsheet"
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] transition-all duration-150 ${
-              isActive("/spreadsheet")
-                ? "bg-[var(--c-brand)] text-white font-medium"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            <svg className="w-[17px] h-[17px] shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125h-1.5m2.625-1.5v-1.5c0-.621-.504-1.125-1.125-1.125M6 18.375v-1.5c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v1.5M6 18.375c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125M6 18.375V7.875c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v10.5" />
-            </svg>
-            <span className="truncate">{t.nav.spreadsheet}</span>
-          </Link>
-        </div>
 
         {/* Add account button */}
         <div className="px-3 pb-3">
@@ -299,24 +272,6 @@ export default function Sidebar() {
 
             {/* Drawer nav links */}
             <div className="flex-1 overflow-y-auto px-4 py-4 flex flex-col gap-1">
-              {/* Spreadsheet */}
-              <Link
-                href="/spreadsheet"
-                onClick={() => setDrawerOpen(false)}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-[14px] transition-all duration-150 ${
-                  isActive("/spreadsheet")
-                    ? "bg-[var(--c-brand)] text-white font-medium"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
-              >
-                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125h-1.5m2.625-1.5v-1.5c0-.621-.504-1.125-1.125-1.125M6 18.375v-1.5c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v1.5M6 18.375c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125M6 18.375V7.875c0-.621.504-1.125 1.125-1.125h9.75c.621 0 1.125.504 1.125 1.125v10.5" />
-                </svg>
-                <span>{spreadsheetItem.label}</span>
-              </Link>
-
-              <div className="border-t border-sidebar-border my-3" />
-
               {/* Theme toggle */}
               <button
                 onClick={() => { toggleDark(); setDrawerOpen(false); }}
