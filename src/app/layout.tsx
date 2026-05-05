@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
-import { Outfit } from "next/font/google";
+import { Outfit, Fraunces } from "next/font/google";
 import { cn } from "@/lib/utils";
 import ThemeProvider from "@/components/ThemeProvider";
 
 const outfit = Outfit({subsets:['latin'],variable:'--font-sans'});
+const fraunces = Fraunces({subsets:['latin'],variable:'--font-display',axes:['SOFT','WONK','opsz']});
 
 export const metadata: Metadata = {
   title: "Finance",
@@ -44,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={cn("font-sans", outfit.variable)} suppressHydrationWarning>
+    <html lang="en" className={cn("font-sans", outfit.variable, fraunces.variable)} suppressHydrationWarning>
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=2" />
         <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />

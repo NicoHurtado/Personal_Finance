@@ -293,4 +293,11 @@ body.modal-open {
   html {
     @apply font-sans;
   }
+  html, body, * {
+    font-family: var(--font-display), Georgia, serif;
+  }
+  .tabular-nums,
+  .tabular-nums * {
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
 }
