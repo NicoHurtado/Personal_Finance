@@ -12,6 +12,12 @@ export interface StockQuote {
   error?: string;
 }
 
+const TICKER_MAP: Record<string, string> = {
+  BTC: "BTC-USD",
+  ETH: "ETH-USD",
+  SOL: "SOL-USD",
+};
+
 export async function fetchStockQuotes(tickers: string[]): Promise<StockQuote[]> {
   if (tickers.length === 0) return [];
 
@@ -21,9 +27,10 @@ export async function fetchStockQuotes(tickers: string[]): Promise<StockQuote[]>
 
   const results = await Promise.all(
     tickers.map(async (ticker) => {
+      const yahooTicker = TICKER_MAP[ticker] ?? ticker;
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const quote: any = await yahooFinance.quote(ticker);
+          const quote: any = await yahooFinance.quote(yahooTicker);
           if (quote.regularMarketPrice != null) {
             return {
               ticker,
