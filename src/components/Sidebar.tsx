@@ -42,6 +42,7 @@ export default function Sidebar() {
   const [userInitials, setUserInitials] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [hasBrokerage, setHasBrokerage] = useState(false);
 
   const generalItems: NavItem[] = [
     {
@@ -94,8 +95,12 @@ export default function Sidebar() {
     },
   ];
 
+  const visibleInvestmentItems = investmentItems.filter(
+    (item) => item.href !== "/stocks" || hasBrokerage
+  );
+
   // Bottom bar: only the 4 essential nav items
-  const bottomBarItems: NavItem[] = [...generalItems, ...investmentItems];
+  const bottomBarItems: NavItem[] = [...generalItems, ...visibleInvestmentItems];
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -108,6 +113,13 @@ export default function Sidebar() {
             parts.map((p: string) => p[0]).join("").toUpperCase().slice(0, 2)
           );
         }
+      })
+      .catch(() => {});
+
+    fetch("/api/v2/accounts")
+      .then((r) => r.json())
+      .then((accounts: { type: string }[]) => {
+        setHasBrokerage(accounts.some((a) => a.type === "brokerage"));
       })
       .catch(() => {});
   }, []);
@@ -163,7 +175,7 @@ export default function Sidebar() {
           <div>
             <p className="px-3 mb-2 text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{t.nav.investments}</p>
             <div className="flex flex-col gap-0.5">
-              {investmentItems.map((item) => (
+              {visibleInvestmentItems.map((item) => (
                 <NavLink key={item.href} item={item} active={isActive(item.href)} />
               ))}
             </div>

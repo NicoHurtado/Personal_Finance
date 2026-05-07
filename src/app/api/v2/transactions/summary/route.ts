@@ -3,10 +3,8 @@ import { connectDB } from "@/lib/mongodb";
 import { getCurrentUser } from "@/lib/auth";
 import { Account } from "@/models/Account";
 import { TransactionV2 } from "@/models/TransactionV2";
-import { Holding } from "@/models/Holding";
 import mongoose from "mongoose";
 import { apiError } from "@/lib/api-utils";
-import { fetchStockQuotes } from "@/lib/stocks";
 import { fetchTrm } from "@/lib/trm";
 
 import { computeFixedIncomeBalance } from "@/lib/fixedIncome";
@@ -38,7 +36,7 @@ export async function GET() {
       .filter((a: any) => a.type === "fixed_income")
       .map((a: any) => a._id);
 
-    const [balanceAgg, recentActivity, cashFlowAgg, dailyCashFlowAgg, dailyFixedFlowAgg, allDailyNetFlow, holdings, trmResult, allTxnsForFixed] =
+    const [balanceAgg, recentActivity, cashFlowAgg, dailyCashFlowAgg, dailyFixedFlowAgg, allDailyNetFlow, trmResult, allTxnsForFixed] =
       await Promise.all([
         TransactionV2.aggregate([
           { $match: { userId } },
@@ -149,16 +147,13 @@ export async function GET() {
           { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 } },
         ]),
 
-        Holding.find({ userId: user._id }).lean(),
-
         fetchTrm(),
 
         TransactionV2.find({ userId: user._id }).select("accountId amount type metadata date").lean(),
       ]);
 
-    // Fetch stock quotes (cached) — runs after holdings are known
-    const tickers = Array.from(new Set(holdings.map((h: any) => h.ticker)));
-    const stockQuotes = await fetchStockQuotes(tickers as string[]);
+    const stockQuotes: any[] = [];
+    const holdings: any[] = [];
 
     // Build account summaries with balances
     const balanceMap: Record<string, { balance: number; count: number; lastDate: Date | null }> = {};

@@ -1,7 +1,23 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import Link from "next/link";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  rectSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import Card from "@/components/Card";
 import { CardSkeleton, TableSkeleton, ChartSkeleton, Skeleton } from "@/components/Skeleton";
 import { formatCOP, formatUSD, formatDate } from "@/lib/format";
@@ -133,6 +149,18 @@ export default function DashboardPage() {
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [stockPrices, setStockPrices] = useState<StockQuote[]>([]);
   const [trm, setTrm] = useState<number>(0);
+  const [ibkrBalanceUSD, setIbkrBalanceUSD] = useState<number | null>(null);
+  const [capitalExpanded, setCapitalExpanded] = useState(false);
+  const [accountOrder, setAccountOrder] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("dashboard-account-order") || "[]"); } catch { return []; }
+  });
+
+  useEffect(() => {
+    fetch("/api/ibkr/balance")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.balanceUSD != null) setIbkrBalanceUSD(data.balanceUSD); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -226,7 +254,9 @@ export default function DashboardPage() {
     return totalGrowth;
   }, [fixedIncomeAccounts]);
 
+  // Use IBKR Flex balance when available, otherwise fall back to holdings calculation
   const hapiUSD = useMemo(() => {
+    if (ibkrBalanceUSD != null) return ibkrBalanceUSD;
     if (holdings.length === 0) return 0;
     const hasLivePrices = stockPrices.some((q) => q.price !== null);
     return holdings.reduce((sum, inv) => {
@@ -234,7 +264,7 @@ export default function DashboardPage() {
       const price = hasLivePrices ? (quote?.price ?? inv.costBasisPerShare) : inv.costBasisPerShare;
       return sum + inv.shares * price;
     }, 0);
-  }, [holdings, stockPrices]);
+  }, [ibkrBalanceUSD, holdings, stockPrices]);
 
   const hapiCOP = hapiUSD * (trm || 0);
   const totalDebt = creditAccounts.reduce((sum, a) => sum + a.balance, 0);
@@ -244,7 +274,7 @@ export default function DashboardPage() {
   const netCapital = useMemo(() => {
     const safeTrm = trm || 0;
     const allAccountsSum = accounts
-      .filter((a) => a.type !== "brokerage") // brokerage uses live prices via hapiCOP
+      .filter((a) => a.type !== "brokerage") // brokerage uses IBKR Flex balance via hapiCOP
       .reduce((sum, a) => sum + (a.currency === "USD" ? a.balance * safeTrm : a.balance), 0);
     return allAccountsSum + hapiCOP;
   }, [accounts, trm, hapiCOP]);
@@ -452,6 +482,73 @@ export default function DashboardPage() {
     return { current, last, expenseDelta, lastMonthDeficit, lastMonthSurplus, currentYm, lastYm, selectedPeriodIncome };
   }, [serverCashFlow, accounts, trm, chartView, selectedMonth, selectedYear]);
 
+  /* ---------- Per-account fixed income growth ---------- */
+
+  const fixedIncomeGrowthByAccount = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const a of fixedIncomeAccounts) {
+      if (a.config?.anchorBalance) {
+        const { growth } = computeCajitaBalance(a.config as Partial<CajitaConfig>);
+        map.set(a._id, growth);
+      }
+    }
+    return map;
+  }, [fixedIncomeAccounts]);
+
+  /* ---------- Selected month income/expense totals ---------- */
+
+  const selectedMonthStats = useMemo(() => {
+    const usdAccountIds = new Set<string>();
+    accounts.forEach((a) => { if (a.currency === "USD") usdAccountIds.add(a._id); });
+    const safeTrm = trm || 0;
+    const monthData = serverCashFlow[selectedMonth] ?? {};
+    let income = 0, expenses = 0;
+    for (const [accId, vals] of Object.entries(monthData)) {
+      const mult = usdAccountIds.has(accId) ? safeTrm : 1;
+      income += vals.income * mult;
+      expenses += vals.expenses * mult;
+    }
+    return { income, expenses, net: income - expenses };
+  }, [serverCashFlow, accounts, trm, selectedMonth]);
+
+  /* ---------- Visible + ordered account cards ---------- */
+
+  const nonZeroAccounts = useMemo(() => {
+    return accounts.filter((a) => {
+      const bal = a.type === "brokerage" ? hapiCOP : (a.currency === "USD" ? a.balance * (trm || 0) : a.balance);
+      return Math.abs(bal) > 0;
+    });
+  }, [accounts, hapiCOP, trm]);
+
+  const sortedVisibleAccounts = useMemo(() => {
+    if (accountOrder.length === 0) return nonZeroAccounts;
+    return [...nonZeroAccounts].sort((a, b) => {
+      const ia = accountOrder.indexOf(a._id);
+      const ib = accountOrder.indexOf(b._id);
+      if (ia === -1 && ib === -1) return 0;
+      if (ia === -1) return 1;
+      if (ib === -1) return -1;
+      return ia - ib;
+    });
+  }, [nonZeroAccounts, accountOrder]);
+
+  const handleAccountDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const ids = sortedVisibleAccounts.map((a) => a._id);
+    const oldIdx = ids.indexOf(active.id as string);
+    const newIdx = ids.indexOf(over.id as string);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const next = arrayMove(ids, oldIdx, newIdx);
+    setAccountOrder(next);
+    localStorage.setItem("dashboard-account-order", JSON.stringify(next));
+  }, [sortedVisibleAccounts]);
+
+  const dndSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
+
   /* ---------- Wallet cards ---------- */
 
   const walletCards = useMemo(() => {
@@ -506,6 +603,49 @@ export default function DashboardPage() {
     : { morning: "Good morning", afternoon: "Good afternoon", evening: "Good evening" };
   const greeting = greetingHour < 12 ? greetingMap.morning : greetingHour < 19 ? greetingMap.afternoon : greetingMap.evening;
 
+  const accountTypeLabel: Record<string, string> = {
+    debit: lang === "es" ? "Débito" : "Debit",
+    credit_card: lang === "es" ? "Crédito" : "Credit",
+    fixed_income: lang === "es" ? "Renta Fija" : "Fixed Income",
+    brokerage: lang === "es" ? "Acciones" : "Stocks",
+  };
+
+  const accountTypeHref: Record<string, (slug: string) => string> = {
+    debit: (slug) => `/savings/${slug}`,
+    credit_card: (slug) => `/credit-cards/${slug.replace(/-tc$/, "")}`,
+    fixed_income: (slug) => `/fixed-income/${slug}`,
+    brokerage: (slug) => `/stocks/${slug}`,
+  };
+
+  const selectedMonthFlowByAccount = serverCashFlow[selectedMonth] ?? {};
+
+  const getAccountBalance = (a: Account): number => {
+    if (a.type === "brokerage") return hapiCOP;
+    return a.currency === "USD" ? a.balance * (trm || 0) : a.balance;
+  };
+
+  const getAccountDelta = (a: Account): { text: string; color: string } => {
+    if (a.type === "debit") {
+      const income = (selectedMonthFlowByAccount[a._id]?.income ?? 0) * (a.currency === "USD" ? (trm || 0) : 1);
+      if (income > 0) return { text: `+${formatCOP(income)} este mes`, color: "text-[var(--c-income)]" };
+      return { text: lang === "es" ? "disponible" : "available", color: "text-[var(--c-text-4)]" };
+    }
+    if (a.type === "fixed_income") {
+      const growth = fixedIncomeGrowthByAccount.get(a._id) ?? 0;
+      if (growth > 0) return { text: `+${formatCOP(growth)} generado`, color: "text-[var(--c-income)]" };
+      if (growth < 0) return { text: formatCOP(growth), color: "text-[var(--c-expense)]" };
+      return { text: lang === "es" ? "sin rendimientos" : "no returns", color: "text-[var(--c-text-4)]" };
+    }
+    if (a.type === "brokerage") {
+      if (hapiUSD > 0) return { text: formatUSD(hapiUSD), color: "text-[var(--c-text-3)]" };
+      return { text: lang === "es" ? "sin posición" : "no position", color: "text-[var(--c-text-4)]" };
+    }
+    if (a.type === "credit_card") {
+      return { text: lang === "es" ? "deuda actual" : "current debt", color: "text-[var(--c-expense)]" };
+    }
+    return { text: "", color: "text-[var(--c-text-4)]" };
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -516,235 +656,229 @@ export default function DashboardPage() {
         </div>
         <div className="hidden md:flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-            </svg>
-            {t.dashboard.last30Days}
-          </div>
-          <div className="flex items-center gap-2 px-3 py-2 bg-card border border-[var(--c-border)] rounded-lg text-[12px] text-[var(--c-text-2)]">
             TRM <span className="font-medium text-[var(--c-text)] tabular-nums">{formatCOP(trm)}</span>
           </div>
         </div>
       </div>
 
-      {/* Portfolio Overview */}
-      <section className={`grid grid-cols-1 gap-3 ${hapiCOP !== 0 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
-        {/* Débito */}
-        <PillarCard
-          href="/savings"
-          label={t.nav.debit}
-          mainValue={formatCOP(liquidityCOP)}
-          secondary={liquidityUSD !== 0 ? `${formatUSD(liquidityUSD)} ${t.dashboard.inUSD}` : undefined}
-          icon={
-            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18" />
-            </svg>
-          }
-          items={debitAccounts.map((a) => ({
-            name: a.name,
-            value: formatCOP(a.currency === "USD" ? a.balance * (trm || 0) : a.balance),
-            secondary: a.currency === "USD" ? formatUSD(a.balance) : undefined,
-          }))}
-        />
-
-        {/* Renta Fija */}
-        <PillarCard
-          href="/fixed-income"
-          label={t.nav.fixedIncome}
-          mainValue={formatCOP(fixedIncomeCOP)}
-          secondary={fixedIncomeGrowth !== 0 ? `${fixedIncomeGrowth > 0 ? "+" : ""}${formatCOP(fixedIncomeGrowth)} ${t.dashboard.hasGrown}` : undefined}
-          secondaryClassName={fixedIncomeGrowth > 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}
-          icon={
-            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
-          items={fixedIncomeAccounts.map((a) => ({
-            name: a.name,
-            value: formatCOP(a.currency === "USD" ? a.balance * (trm || 0) : a.balance),
-            secondary: a.currency === "USD" ? formatUSD(a.balance) : undefined,
-          }))}
-        />
-
-        {/* Acciones — solo si hay saldo */}
-        {hapiCOP !== 0 && <PillarCard
-          href="/stocks"
-          label={t.nav.stocks}
-          mainValue={hapiCOP !== 0 ? formatCOP(hapiCOP) : "—"}
-          secondary={hapiUSD !== 0 ? formatUSD(hapiUSD) : undefined}
-          icon={
-            <svg className="w-4 h-4 text-[var(--c-text-2)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.7}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
-            </svg>
-          }
-          items={holdings.map((h) => {
-            const quote = stockPrices.find((q) => q.ticker === h.ticker);
-            const hasLive = stockPrices.some((q) => q.price !== null);
-            const price = hasLive ? (quote?.price ?? h.costBasisPerShare) : h.costBasisPerShare;
-            const valueUSD = h.shares * price;
-            return {
-              name: h.ticker,
-              secondary: h.companyName,
-              value: formatUSD(valueUSD),
-            };
-          })}
-        />}
-
-        {/* Capital Total — right side, secondary */}
-        <div className="md:col-span-1 rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface-2)] px-5 py-5 flex flex-col justify-between">
-          <div>
-            <p className="text-[11px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-4">{t.dashboard.totalCapital}</p>
-            <p className="text-[28px] font-bold tabular-nums text-[var(--c-text)] leading-none">{formatCOP(netCapital)}</p>
-          </div>
-          {debtAbs > 0 && (
-            <div className="mt-5 pt-4 border-t border-[var(--c-border)]">
-              <div className="flex items-center justify-between">
-                <p className="text-[11px] text-[var(--c-text-4)]">{t.dashboard.totalDebt}</p>
-                <p className="text-[13px] font-semibold tabular-nums text-[var(--c-expense)]">{formatCOP(debtAbs)}</p>
-              </div>
+      {/* MIS CUENTAS */}
+      <section className="space-y-3">
+        <h2 className="text-[11px] font-semibold text-[var(--c-text-3)] uppercase tracking-widest">
+          {lang === "es" ? "Mis cuentas" : "My accounts"}
+        </h2>
+        <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleAccountDragEnd}>
+          <SortableContext items={sortedVisibleAccounts.map((a) => a._id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {sortedVisibleAccounts.map((a) => {
+                const balance = getAccountBalance(a);
+                const delta = getAccountDelta(a);
+                const href = (accountTypeHref[a.type] ?? ((slug: string) => `/savings/${slug}`))(a.slug);
+                const isDebt = a.type === "credit_card";
+                return (
+                  <SortableAccountCard
+                    key={a._id}
+                    id={a._id}
+                    href={href}
+                    color={a.color}
+                    typeLabel={accountTypeLabel[a.type] ?? a.type}
+                    name={a.name}
+                    balance={formatCOP(isDebt ? Math.abs(balance) : balance)}
+                    balanceClassName={isDebt ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}
+                    deltaText={delta.text}
+                    deltaColor={delta.color}
+                  />
+                );
+              })}
             </div>
-          )}
+          </SortableContext>
+        </DndContext>
+      </section>
+
+      {/* FLUJO DEL MES */}
+      <section className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[11px] font-semibold text-[var(--c-text-3)] uppercase tracking-widest">
+            {lang === "es" ? "Flujo del mes" : "Monthly flow"}
+          </h2>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx < availableMonths.length - 1) { setSelectedMonth(availableMonths[idx + 1]); setChartView("month"); } }}
+              disabled={availableMonths.indexOf(selectedMonth) >= availableMonths.length - 1}
+              className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+            </button>
+            <select
+              value={selectedMonth}
+              onChange={(e) => { setSelectedMonth(e.target.value); setChartView("month"); }}
+              className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors"
+            >
+              {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m, monthLocale)}</option>))}
+            </select>
+            <button
+              onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) { setSelectedMonth(availableMonths[idx - 1]); setChartView("month"); } }}
+              disabled={availableMonths.indexOf(selectedMonth) <= 0}
+              className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30"
+            >
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          {/* Ingresos */}
+          <Card padding="md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-[var(--c-income-bg)] flex items-center justify-center shrink-0">
+                <svg className="w-3.5 h-3.5 text-[var(--c-income)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                </svg>
+              </div>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)]">{lang === "es" ? "Ingresos" : "Income"}</p>
+            </div>
+            <p className="text-[22px] font-semibold tabular-nums text-[var(--c-text)] leading-none">{formatCOP(selectedMonthStats.income)}</p>
+          </Card>
+
+          {/* Gastos */}
+          <Card padding="md">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-[var(--c-expense-bg2)] flex items-center justify-center shrink-0">
+                <svg className="w-3.5 h-3.5 text-[var(--c-expense)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                </svg>
+              </div>
+              <p className="text-[11px] font-medium text-[var(--c-text-3)]">{t.dashboard.expenses}</p>
+            </div>
+            <p className="text-[22px] font-semibold tabular-nums text-[var(--c-text)] leading-none">{formatCOP(selectedMonthStats.expenses)}</p>
+          </Card>
+        </div>
+
+        {/* Balance neto */}
+        <div className="flex items-center justify-between px-1 py-2">
+          <span className="text-[12px] font-medium text-[var(--c-text-3)]">{lang === "es" ? "Balance neto" : "Net balance"}</span>
+          <span className={`text-[15px] font-semibold tabular-nums ${selectedMonthStats.net >= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"}`}>
+            {selectedMonthStats.net > 0 ? "+" : ""}{formatCOP(selectedMonthStats.net)}
+          </span>
         </div>
       </section>
 
-      {/* Cash Flow chart + side cards */}
-      <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <Card className="lg:col-span-3" padding="lg">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <h2 className="text-[13px] font-semibold text-[var(--c-text)] tracking-tight">{t.dashboard.cashFlow}</h2>
-            <div className="flex items-center gap-2 flex-wrap">
-              {chartView === "month" ? (
-                <div className="flex items-center gap-1">
-                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx < availableMonths.length - 1) setSelectedMonth(availableMonths[idx + 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) >= availableMonths.length - 1} aria-label="Previous month">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
-                  </button>
-                  <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
-                    {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m, monthLocale)}</option>))}
-                  </select>
-                  <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) setSelectedMonth(availableMonths[idx - 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) <= 0} aria-label="Next month">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
-                  </button>
-                </div>
-              ) : (
-                <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
-                  {availableYears.map((y) => (<option key={y} value={y}>{y}</option>))}
+      {/* Cash Flow chart — full width */}
+      <Card padding="lg">
+        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+          <h2 className="text-[13px] font-semibold text-[var(--c-text)] tracking-tight">{t.dashboard.cashFlow}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            {chartView === "month" ? (
+              <div className="flex items-center gap-1">
+                <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx < availableMonths.length - 1) setSelectedMonth(availableMonths[idx + 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) >= availableMonths.length - 1}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" /></svg>
+                </button>
+                <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
+                  {availableMonths.map((m) => (<option key={m} value={m}>{monthLabel(m, monthLocale)}</option>))}
                 </select>
-              )}
-              <div className="w-px h-3.5 bg-[var(--c-border)]" />
-              <div className="flex items-center bg-[var(--c-surface-2)] rounded-lg p-0.5 gap-0.5">
-                <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.monthly}</button>
-                <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.yearly}</button>
+                <button onClick={() => { const idx = availableMonths.indexOf(selectedMonth); if (idx > 0) setSelectedMonth(availableMonths[idx - 1]); }} className="w-6 h-6 flex items-center justify-center rounded-md text-[var(--c-text-4)] hover:text-[var(--c-text)] hover:bg-[var(--c-surface-2)] transition-colors disabled:opacity-30" disabled={availableMonths.indexOf(selectedMonth) <= 0}>
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" /></svg>
+                </button>
               </div>
-              <div className="w-px h-3.5 bg-[var(--c-border)]" />
-              <div className="flex items-center gap-3">
-                <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[var(--c-brand)]" /> {t.dashboard.capital}</span>
-                <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[var(--c-grad2)] opacity-80" /> {t.dashboard.expenses}</span>
-              </div>
+            ) : (
+              <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} className="text-[12px] font-medium text-[var(--c-text)] bg-transparent border-none outline-none cursor-pointer hover:text-[var(--c-brand)] transition-colors">
+                {availableYears.map((y) => (<option key={y} value={y}>{y}</option>))}
+              </select>
+            )}
+            <div className="w-px h-3.5 bg-[var(--c-border)]" />
+            <div className="flex items-center bg-[var(--c-surface-2)] rounded-lg p-0.5 gap-0.5">
+              <button onClick={() => setChartView("month")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "month" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.monthly}</button>
+              <button onClick={() => setChartView("year")} className={`text-[11px] px-2.5 py-1 rounded-md transition-all ${chartView === "year" ? "bg-card text-[var(--c-text)] shadow-sm font-medium" : "text-[var(--c-text-4)] hover:text-[var(--c-text-2)]"}`}>{t.common.yearly}</button>
+            </div>
+            <div className="w-px h-3.5 bg-[var(--c-border)]" />
+            <div className="flex items-center gap-3">
+              <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-4 h-[2px] rounded-full bg-[var(--c-brand)]" /> {t.dashboard.capital}</span>
+              <span className="inline-flex text-[11px] text-[var(--c-text-4)] items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-[var(--c-grad2)] opacity-80" /> {t.dashboard.expenses}</span>
             </div>
           </div>
-          {(() => {
-            const maxExpense = Math.max(...cashFlow.data.map((d: any) => d.expenseBar ?? 0), 1);
-            const expenseDomainMax = maxExpense * 4;
-            return (
-          <div className="h-[260px] -mx-1">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={cashFlow.data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap={chartView === "month" ? "30%" : "40%"}>
-                <defs>
-                  <linearGradient id="capitalFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--c-brand)" stopOpacity={0.12} />
-                    <stop offset="100%" stopColor="var(--c-brand)" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="expenseBarFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="var(--c-grad2)" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="var(--c-grad2)" stopOpacity={0.5} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid vertical={false} stroke="var(--c-chart-grid)" strokeDasharray="0" />
-                <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--c-text-5)", fontWeight: 400 }} tickLine={false} axisLine={false} interval={chartView === "month" ? "preserveStartEnd" : 0} dy={6} />
-                <YAxis yAxisId="capital" tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
-                <YAxis yAxisId="expense" orientation="right" domain={[0, expenseDomainMax]} tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
-                <Tooltip cursor={{ fill: "rgba(2,88,100,0.03)" }} content={<CashFlowTooltip chartView={chartView} tDashboard={t.dashboard} />} />
-                <Bar yAxisId="expense" dataKey="expenseBar" fill="url(#expenseBarFill)" radius={[4, 4, 0, 0]} name="expense" maxBarSize={28} />
-                <Area yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} fill="url(#capitalFill)" name="capital" />
-                <Line yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--c-brand)", stroke: "var(--c-tooltip-bg)", strokeWidth: 2 }} legendType="none" />
-              </ComposedChart>
-            </ResponsiveContainer>
+        </div>
+        {(() => {
+          const maxExpense = Math.max(...cashFlow.data.map((d: any) => d.expenseBar ?? 0), 1);
+          const expenseDomainMax = maxExpense * 4;
+          return (
+            <div className="h-[260px] -mx-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={cashFlow.data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap={chartView === "month" ? "30%" : "40%"}>
+                  <defs>
+                    <linearGradient id="capitalFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--c-brand)" stopOpacity={0.12} />
+                      <stop offset="100%" stopColor="var(--c-brand)" stopOpacity={0} />
+                    </linearGradient>
+                    <linearGradient id="expenseBarFill" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="var(--c-grad2)" stopOpacity={0.9} />
+                      <stop offset="100%" stopColor="var(--c-grad2)" stopOpacity={0.5} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid vertical={false} stroke="var(--c-chart-grid)" strokeDasharray="0" />
+                  <XAxis dataKey="label" tick={{ fontSize: 10, fill: "var(--c-text-5)", fontWeight: 400 }} tickLine={false} axisLine={false} interval={chartView === "month" ? "preserveStartEnd" : 0} dy={6} />
+                  <YAxis yAxisId="capital" tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
+                  <YAxis yAxisId="expense" orientation="right" domain={[0, expenseDomainMax]} tick={{ fontSize: 10, fill: "var(--c-text-5)" }} tickLine={false} axisLine={false} tickFormatter={(v: number) => formatCompact(v)} width={42} />
+                  <Tooltip cursor={{ fill: "rgba(2,88,100,0.03)" }} content={<CashFlowTooltip chartView={chartView} tDashboard={t.dashboard} />} />
+                  <Bar yAxisId="expense" dataKey="expenseBar" fill="url(#expenseBarFill)" radius={[4, 4, 0, 0]} name="expense" maxBarSize={28} />
+                  <Area yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} fill="url(#capitalFill)" name="capital" />
+                  <Line yAxisId="capital" type="monotoneX" dataKey="capital" stroke="var(--c-brand)" strokeWidth={1.5} dot={false} activeDot={{ r: 4, fill: "var(--c-brand)", stroke: "var(--c-tooltip-bg)", strokeWidth: 2 }} legendType="none" />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          );
+        })()}
+      </Card>
+
+      {/* Capital Total — collapsible */}
+      <div className="rounded-2xl border border-[var(--c-border)] bg-[var(--c-surface-2)] overflow-hidden">
+        <button
+          onClick={() => setCapitalExpanded((v) => !v)}
+          className="w-full flex items-center justify-between px-5 py-4 hover:bg-[var(--c-surface)] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <p className="text-[11px] font-semibold text-[var(--c-text-3)] uppercase tracking-widest">{t.dashboard.totalCapital}</p>
           </div>
-            );
-          })()}
-        </Card>
+          <div className="flex items-center gap-3">
+            <p className="text-[22px] font-bold tabular-nums text-[var(--c-text)] leading-none">{formatCOP(netCapital)}</p>
+            <svg
+              className={`w-4 h-4 text-[var(--c-text-4)] transition-transform duration-200 ${capitalExpanded ? "rotate-180" : ""}`}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </div>
+        </button>
 
-        <div className="lg:col-span-1 flex flex-col gap-3">
-          {/* Ingresos — dinámico según período del gráfico */}
-          <Card padding="md" className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[var(--c-income-bg)] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[var(--c-income)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{lang === "es" ? "Ingresos" : "Income"}</p>
-              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(monthlyStats.selectedPeriodIncome)}</p>
-              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth, monthLocale) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
-            </div>
-          </Card>
-
-          {/* Gastos este mes */}
-          <Card padding="md" className="flex items-center gap-3.5">
-            <div className="w-9 h-9 rounded-xl bg-[var(--c-expense-bg2)] flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-[var(--c-expense)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[11px] text-[var(--c-text-4)] mb-0.5">{t.dashboard.expenses}</p>
-              <p className="text-[17px] font-semibold text-[var(--c-text)] tabular-nums truncate leading-tight">{formatCOP(cashFlow.selectedPeriodExpense)}</p>
-              <p className="text-[10px] text-[var(--c-text-5)] mt-0.5">{chartView === "month" ? monthLabel(selectedMonth, monthLocale) : `${t.dashboard.yearLabel} ${selectedYear}`}</p>
-            </div>
-          </Card>
-
-          {/* Análisis mes anterior */}
-          {monthlyStats.last.income > 0 && (
-            <Card padding="md">
-              <p className="text-[10px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-2.5">
-                {lang === "es" ? "Análisis — mes anterior" : "Analysis — last month"}
-              </p>
-
-              {/* Deficit / surplus badge */}
-              <div className={`flex items-start gap-2 mb-3 rounded-lg px-3 py-2.5 ${
-                monthlyStats.lastMonthDeficit
-                  ? "bg-[var(--c-expense-bg2)]"
-                  : "bg-[var(--c-income-bg)]"
-              }`}>
-                <span className="mt-0.5 shrink-0 text-[13px]">
-                  {monthlyStats.lastMonthDeficit ? "⚠️" : "✓"}
-                </span>
-                <p className={`text-[11px] leading-snug font-medium ${
-                  monthlyStats.lastMonthDeficit ? "text-[var(--c-expense)]" : "text-[var(--c-income)]"
-                }`}>
-                  {monthlyStats.lastMonthDeficit
-                    ? (lang === "es" ? "El mes pasado gastaste más de lo que ingresó" : "Last month you spent more than you earned")
-                    : (lang === "es" ? "El mes pasado cerraste en positivo" : "Last month you had a surplus")}
-                </p>
-              </div>
-
-              {/* % change in expenses */}
-              {monthlyStats.last.expenses > 0 && (
+        {capitalExpanded && (
+          <div className="px-5 pb-4 pt-0 border-t border-[var(--c-border)] space-y-2.5">
+            <div className="pt-3 space-y-2">
+              {liquidityCOP > 0 && (
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] text-[var(--c-text-4)]">
-                    {lang === "es" ? "Gastos vs mes anterior" : "Expenses vs last month"}
-                  </p>
-                  <span className={`text-[12px] font-semibold tabular-nums ${
-                    monthlyStats.expenseDelta <= 0 ? "text-[var(--c-income)]" : "text-[var(--c-expense)]"
-                  }`}>
-                    {monthlyStats.expenseDelta > 0 ? "+" : ""}{monthlyStats.expenseDelta.toFixed(1)}%
-                  </span>
+                  <span className="text-[12px] text-[var(--c-text-3)]">{t.nav.debit}</span>
+                  <span className="text-[13px] font-medium tabular-nums text-[var(--c-text)]">{formatCOP(liquidityCOP)}</span>
                 </div>
               )}
-            </Card>
-          )}
-        </div>
-      </section>
+              {fixedIncomeCOP > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-[var(--c-text-3)]">{t.nav.fixedIncome}</span>
+                  <span className="text-[13px] font-medium tabular-nums text-[var(--c-text)]">{formatCOP(fixedIncomeCOP)}</span>
+                </div>
+              )}
+              {hapiCOP > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] text-[var(--c-text-3)]">{t.nav.stocks}</span>
+                  <span className="text-[13px] font-medium tabular-nums text-[var(--c-text)]">{formatCOP(hapiCOP)}</span>
+                </div>
+              )}
+              {debtAbs > 0 && (
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--c-border)]">
+                  <span className="text-[12px] text-[var(--c-text-3)]">{t.dashboard.totalDebt}</span>
+                  <span className="text-[13px] font-semibold tabular-nums text-[var(--c-expense)]">−{formatCOP(debtAbs)}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Recent Activity + My Cards */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -794,7 +928,6 @@ export default function DashboardPage() {
               <h2 className="text-title text-[var(--c-text)]">{t.dashboard.myCards}</h2>
             </div>
           </div>
-
           <div className="flex flex-col gap-2">
             {walletCards.map((card) => {
               const isUsd = card.currency === "USD";
@@ -809,16 +942,9 @@ export default function DashboardPage() {
                   href={href}
                   className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-[var(--c-surface-2)] transition-colors group"
                 >
-                  <div
-                    className="w-10 h-6 rounded-md shrink-0 shadow-sm"
-                    style={{ background: `linear-gradient(135deg, ${card.color} 0%, ${gradientEnd || card.color} 100%)` }}
-                  />
-                  <span className="flex-1 text-[12px] text-[var(--c-text-2)] group-hover:text-[var(--c-text)] transition-colors truncate">
-                    {card.name}
-                  </span>
-                  <span className={`text-[12px] tabular-nums font-medium shrink-0 ${card.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>
-                    {fmt(card.balance)}
-                  </span>
+                  <div className="w-10 h-6 rounded-md shrink-0 shadow-sm" style={{ background: `linear-gradient(135deg, ${card.color} 0%, ${gradientEnd || card.color} 100%)` }} />
+                  <span className="flex-1 text-[12px] text-[var(--c-text-2)] group-hover:text-[var(--c-text)] transition-colors truncate">{card.name}</span>
+                  <span className={`text-[12px] tabular-nums font-medium shrink-0 ${card.balance < 0 ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}`}>{fmt(card.balance)}</span>
                 </Link>
               );
             })}
@@ -880,75 +1006,54 @@ function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any)
   );
 }
 
-/* ---------- PillarCard ---------- */
+/* ---------- SortableAccountCard ---------- */
 
-interface PillarItem { name: string; value: string; secondary?: string }
-
-function PillarCard({
-  href, label, mainValue, secondary, secondaryClassName = "text-[var(--c-text-4)]",
-  icon, items,
+function SortableAccountCard({
+  id, href, color, typeLabel, name, balance, balanceClassName, deltaText, deltaColor,
 }: {
-  href: string; label: string; mainValue: string; secondary?: string;
-  secondaryClassName?: string; icon: React.ReactNode; items: PillarItem[];
+  id: string; href: string; color: string; typeLabel: string; name: string;
+  balance: string; balanceClassName: string; deltaText: string; deltaColor: string;
 }) {
-  const [hovered, setHovered] = useState(false);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : undefined,
+    opacity: isDragging ? 0.85 : 1,
+  };
 
   return (
-    <div
-      className="md:col-span-1 relative"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
+    <div ref={setNodeRef} style={style} className="relative group/card">
+      {/* drag handle — visible on hover */}
+      <button
+        {...attributes}
+        {...listeners}
+        className="absolute top-2 right-2 z-10 w-5 h-5 flex items-center justify-center rounded opacity-0 group-hover/card:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-[var(--c-text-5)] hover:text-[var(--c-text-3)]"
+        tabIndex={-1}
+        aria-label="Drag to reorder"
+      >
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9h16.5M3.75 15h16.5" />
+        </svg>
+      </button>
+
       <Link
         href={href}
-        className={`group flex flex-col rounded-2xl border bg-card px-5 py-5 transition-all duration-200 ${
-          hovered ? "border-[var(--c-brand)]/30 shadow-sm" : "border-[var(--c-border)]"
-        }`}
+        className="flex flex-col rounded-2xl border border-[var(--c-border)] bg-card px-4 py-4 gap-3 hover:border-[var(--c-brand)]/30 hover:shadow-sm transition-all duration-200 select-none"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-8 h-8 rounded-xl bg-[var(--c-surface-2)] flex items-center justify-center">
-            {icon}
-          </div>
-          <svg
-            className={`w-3.5 h-3.5 transition-colors ${hovered ? "text-[var(--c-brand)]" : "text-[var(--c-text-5)]"}`}
-            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: color }} />
+          <span className="text-[11px] font-medium text-[var(--c-text-3)] truncate">{typeLabel}</span>
         </div>
-        <p className="text-[11px] font-medium text-[var(--c-text-4)] uppercase tracking-wide mb-1.5">{label}</p>
-        <p className="text-[24px] font-semibold tabular-nums text-[var(--c-text)] leading-none">{mainValue}</p>
-        {secondary && (
-          <p className={`text-[11px] mt-1.5 tabular-nums font-medium ${secondaryClassName}`}>{secondary}</p>
-        )}
+        <div>
+          <p className="text-[12px] text-[var(--c-text-2)] mb-1 truncate">{name}</p>
+          <p className={`text-[20px] font-semibold tabular-nums leading-none ${balanceClassName}`}>{balance}</p>
+          {deltaText && (
+            <p className={`text-[11px] mt-1.5 font-medium ${deltaColor}`}>{deltaText}</p>
+          )}
+        </div>
       </Link>
-
-      {/* Breakdown tooltip */}
-      {items.length > 0 && (
-        <div
-          className={`absolute top-full left-0 right-0 mt-2 z-50 transition-all duration-200 ${
-            hovered ? "opacity-100 translate-y-0 pointer-events-auto" : "opacity-0 -translate-y-1 pointer-events-none"
-          }`}
-        >
-          <div className="rounded-xl border border-[var(--c-border)] bg-card shadow-lg shadow-black/5 overflow-hidden">
-            {/* small arrow */}
-            <div className="absolute -top-1.5 left-6 w-3 h-3 rotate-45 border-l border-t border-[var(--c-border)] bg-card" />
-            <div className="px-4 py-3 space-y-2.5">
-              {items.map((item, i) => (
-                <div key={i} className="flex items-center justify-between gap-3 min-w-0">
-                  <div className="min-w-0">
-                    <p className="text-[12px] font-medium text-[var(--c-text)] truncate">{item.name}</p>
-                    {item.secondary && (
-                      <p className="text-[10px] text-[var(--c-text-4)] truncate">{item.secondary}</p>
-                    )}
-                  </div>
-                  <p className="text-[12px] font-semibold tabular-nums text-[var(--c-text)] shrink-0">{item.value}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
