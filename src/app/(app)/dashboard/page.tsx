@@ -624,7 +624,7 @@ export default function DashboardPage() {
     return a.currency === "USD" ? a.balance * (trm || 0) : a.balance;
   };
 
-  const getAccountDelta = (a: Account): { text: string; color: string } => {
+  const getAccountDelta = (a: Account): { text: string; color: string; note?: string } => {
     if (a.type === "debit") {
       const income = (selectedMonthFlowByAccount[a._id]?.income ?? 0) * (a.currency === "USD" ? (trm || 0) : 1);
       if (income > 0) return { text: `+${formatCOP(income)} este mes`, color: "text-[var(--c-income)]" };
@@ -637,8 +637,9 @@ export default function DashboardPage() {
       return { text: lang === "es" ? "sin rendimientos" : "no returns", color: "text-[var(--c-text-4)]" };
     }
     if (a.type === "brokerage") {
-      if (hapiUSD > 0) return { text: formatUSD(hapiUSD), color: "text-[var(--c-text-3)]" };
-      return { text: lang === "es" ? "sin posición" : "no position", color: "text-[var(--c-text-4)]" };
+      const note = lang === "es" ? "Cierre último día hábil" : "Prior business day close";
+      if (hapiUSD > 0) return { text: formatUSD(hapiUSD), color: "text-[var(--c-text-3)]", note };
+      return { text: lang === "es" ? "sin posición" : "no position", color: "text-[var(--c-text-4)]", note };
     }
     if (a.type === "credit_card") {
       return { text: lang === "es" ? "deuda actual" : "current debt", color: "text-[var(--c-expense)]" };
@@ -686,6 +687,7 @@ export default function DashboardPage() {
                     balanceClassName={isDebt ? "text-[var(--c-expense)]" : "text-[var(--c-text)]"}
                     deltaText={delta.text}
                     deltaColor={delta.color}
+                    note={delta.note}
                   />
                 );
               })}
@@ -1009,10 +1011,10 @@ function CashFlowTooltip({ active, payload, label, chartView, tDashboard }: any)
 /* ---------- SortableAccountCard ---------- */
 
 function SortableAccountCard({
-  id, href, color, typeLabel, name, balance, balanceClassName, deltaText, deltaColor,
+  id, href, color, typeLabel, name, balance, balanceClassName, deltaText, deltaColor, note,
 }: {
   id: string; href: string; color: string; typeLabel: string; name: string;
-  balance: string; balanceClassName: string; deltaText: string; deltaColor: string;
+  balance: string; balanceClassName: string; deltaText: string; deltaColor: string; note?: string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -1051,6 +1053,9 @@ function SortableAccountCard({
           <p className={`text-[20px] font-semibold tabular-nums leading-none ${balanceClassName}`}>{balance}</p>
           {deltaText && (
             <p className={`text-[11px] mt-1.5 font-medium ${deltaColor}`}>{deltaText}</p>
+          )}
+          {note && (
+            <p className="text-[10px] mt-1 text-[var(--c-text-5)]">{note}</p>
           )}
         </div>
       </Link>

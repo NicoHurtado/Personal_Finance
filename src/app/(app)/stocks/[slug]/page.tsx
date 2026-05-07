@@ -165,6 +165,13 @@ export default function BrokerDetailPage() {
             </Card>
           </div>
 
+          <div className="flex items-center gap-1.5 text-[11px] text-[var(--c-text-4)]">
+            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>Valor al cierre del último día hábil — la API de IBKR no entrega datos en tiempo real</span>
+          </div>
+
           {lastUpdated && (
             <p className="text-[11px] text-[var(--c-text-3)]">
               {isCached ? "Datos guardados del" : "Sincronizado con IBKR ·"} {lastUpdated}
