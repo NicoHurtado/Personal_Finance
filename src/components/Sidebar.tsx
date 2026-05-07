@@ -182,22 +182,6 @@ export default function Sidebar() {
           </div>
         </nav>
 
-        {/* Notes link */}
-        <div className="px-3 pb-2">
-          <NavLink
-            item={{
-              href: "/notas",
-              label: t.nav.notes,
-              icon: (
-                <svg className="w-[17px] h-[17px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 01-1.125-1.125M3.375 19.5h1.5C5.496 19.5 6 18.996 6 18.375m-3.75.125v-14.25A1.125 1.125 0 013.375 3h13.5a1.125 1.125 0 011.125 1.125v3.026M6 18.375V7.875C6 7.254 6.504 6.75 7.125 6.75h9.75c.621 0 1.125.504 1.125 1.125v10.5c0 .621-.504 1.125-1.125 1.125H7.125C6.504 19.5 6 18.996 6 18.375zm5.625-10.5h3.375m-3.375 3h3.375m-6.75 3h6.75" />
-                </svg>
-              ),
-            }}
-            active={isActive("/notas")}
-          />
-        </div>
-
         {/* Add account button */}
         <div className="px-3 pb-3">
           <button

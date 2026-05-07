@@ -16,7 +16,6 @@ export const translations = {
       more: "More",
       switchToEnglish: "Switch to English",
       switchToSpanish: "Switch to Spanish",
-      notes: "Notes",
     },
 
     // ── Common ────────────────────────────────────────────────────────────
@@ -396,7 +395,6 @@ export const translations = {
       more: "Más",
       switchToEnglish: "Cambiar a Inglés",
       switchToSpanish: "Cambiar a Español",
-      notes: "Notas",
     },
 
     // ── Common ────────────────────────────────────────────────────────────
